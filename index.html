@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Province de Tan-Tan - Accueil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      /* Deep Royal Blue */
+      --accent: #0ea5e9;
+      /* Sky Blue */
+      --glass: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(14, 165, 233, 0.2);
+      --tan-tan-blue: #7dd3fc;
+      /* Harmonized Light Blue */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      background: #f1f5f9;
+      /* Gray fallback */
+    }
+
+    /* 1. Full Screen Background with Muted Gray Overlay */
+    .bg-master {
+      position: fixed;
+      inset: 0;
+      background: url('img/sahara_maroc.jpeg') center/cover no-repeat;
+      z-index: -1;
+      animation: bgSlowZoom 40s infinite alternate ease-in-out;
+    }
+
+    @keyframes bgSlowZoom {
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1.1);
+      }
+    }
+
+    .bg-master::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(241, 245, 249, 0.82);
+      /* Decreased opacity for better visibility of sahara */
+      backdrop-filter: saturate(0.8);
+      /* Less desaturated */
+    }
+
+    /* --- ULTRA-PREMIUM WOW HEADER --- */
+    header {
+      padding: 30px 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(26, 54, 93, 0.2);
+      z-index: 1000;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      /* removed initial animation to control via intro-mode */
+      transition: height 1.5s cubic-bezier(0.85, 0, 0.15, 1), padding 1.5s ease;
+    }
+
+    body.intro-mode header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      padding: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.intro-mode .logo-box {
+      display: none;
+    }
+
+    body.intro-mode #map-wrapper,
+    body.intro-mode .floating-photos,
+    body.intro-mode .zoom-group,
+    body.intro-mode footer,
+    body.intro-mode .overlay-controls {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Zalij Background Layer inside Header */
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url('img/zalij.png') center/repeat;
+      opacity: 0.04;
+      /* Very subtle texture */
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Shimmer Effect across Header */
+    header::after {
+      content: "";
+      position: absolute;
+      top: -100%;
+      left: -100%;
+      width: 300%;
+      height: 300%;
+      background: linear-gradient(45deg,
+          transparent 45%,
+          rgba(255, 255, 255, 0.6) 50%,
+          transparent 55%);
+      transform: rotate(-45deg);
+      animation: shimmerLoop 8s infinite linear;
+      pointer-events: none;
+    }
+
+    @keyframes shimmerLoop {
+      0% {
+        transform: translate(-30%, -30%) rotate(-45deg);
+      }
+
+      100% {
+        transform: translate(30%, 30%) rotate(-45deg);
+      }
+    }
+
+    @keyframes headerEntrance {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .header-center {
+      text-align: center;
+      position: relative;
+    }
+
+    .titre-premium {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .subtitle-container {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Dramatically Harmonized Shimmering Title - BACK TO BLUE */
+    .pdti-subtitle {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #1e3a8a, #0ea5e9, #1e3a8a);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shineText 5s linear infinite;
+      transition: all 1.5s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+
+    body.intro-mode .pdti-subtitle {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+
+    @keyframes shineText {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .maroc-separator {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      justify-content: center;
+    }
+
+    .maroc-text {
+      color: #4b5563;
+      font-size: 0.75rem;
+      letter-spacing: 8px;
+      font-weight: 700;
+    }
+
+    .province-text {
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 1.8rem;
+      color: var(--primary);
+      color: var(--primary);
+      letter-spacing: 4px;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      transition: all 1.5s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+
+    body.intro-mode .province-text {
+      font-size: 5rem;
+      letter-spacing: 10px;
+      text-shadow: 0 15px 30px rgba(30, 58, 138, 0.3);
+      transform: scale(1.1);
+    }
+
+    .line {
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--accent), transparent);
+      flex: 1;
+      width: 150px;
+      opacity: 0.6;
+      transition: all 1.5s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+
+    body.intro-mode .line {
+      width: 0;
+      opacity: 0;
+      margin: 0;
+    }
+
+    /* Mobile adjustments for intro mode */
+    @media (max-width: 768px) {
+      body.intro-mode .province-text {
+        font-size: 3rem;
+        letter-spacing: 5px;
+      }
+
+      body.intro-mode .pdti-subtitle {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* --- CIRCULAR WOW LOGOS --- */
+    .logo-box {
+      width: 110px;
+      height: 110px;
+      padding: 12px;
+      background: white;
+      border-radius: 50%;
+      /* Circle as requested */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      z-index: 2;
+      animation: logoEntrance 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+
+    .logo-box-left {
+      animation-delay: 0.4s;
+    }
+
+    .logo-box-right {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes logoEntrance {
+      from {
+        transform: scale(0) rotate(-15deg);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+      }
+    }
+
+    /* Glowing Ring around Logo */
+    .logo-box::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--accent), #38bdf8, var(--accent));
+      background-size: 200% 200%;
+      z-index: -1;
+      opacity: 0.3;
+      transition: opacity 0.3s;
+      animation: rotateGlow 3s linear infinite;
+    }
+
+    @keyframes rotateGlow {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .logo-box:hover {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+    }
+
+    .logo-box:hover::before {
+      opacity: 1;
+      filter: blur(8px);
+    }
+
+    .logo-box img {
+      width: 80%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    /* The Map - Full Screen Viewport */
+    #map-wrapper {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      animation: mapEntrance 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes mapEntrance {
+      from {
+        opacity: 0;
+        filter: blur(10px) brightness(1.5);
+        transform: scale(1.05);
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0) brightness(1);
+        transform: scale(1);
+      }
+    }
+
+    #ma-carte {
+      width: 100%;
+      height: 100%;
+      background: transparent !important;
+    }
+
+    /* Info Overlay */
+    .overlay-controls {
+      position: absolute;
+      bottom: 50px;
+      left: 50px;
+      z-index: 100;
+    }
+
+    .info-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border);
+      padding: 30px;
+      border-radius: 30px;
+      color: white;
+      max-width: 380px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .info-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+
+    .info-card p {
+      font-size: 1rem;
+      opacity: 0.85;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .info-card strong {
+      color: #f43f5e;
+      font-weight: 700;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Custom Map UI */
+    .mon-label {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 6px 14px;
+      font-weight: 800;
+      color: var(--primary);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .custom-marker-icon {
+      color: #1e3a8a;
+      /* Deep Blue as requested */
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+      animation: pinBounce 2s infinite ease-in-out;
+    }
+
+    @keyframes pinBounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .tantan-pulse {
+      animation: mapPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes mapPulse {
+      0% {
+        fill-opacity: 0.7;
+        stroke-width: 2;
+        filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.5));
+      }
+
+      50% {
+        fill-opacity: 0.95;
+        stroke-width: 6;
+        filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.8));
+      }
+
+      100% {
+        fill-opacity: 0.7;
+        stroke-width: 2;
+        filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.5));
+      }
+    }
+
+    .zoom-group {
+      position: absolute;
+      top: 150px;
+      right: 50px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-zoom {
+      width: 50px;
+      height: 50px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      color: white;
+      border-radius: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-zoom:hover {
+      background: var(--accent);
+      transform: translateX(-5px);
+    }
+
+    footer {
+      position: absolute;
+      bottom: 30px;
+      right: 50px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.8rem;
+      z-index: 100;
+      letter-spacing: 3px;
+      font-weight: 500;
+    }
+
+    /* Responsive adjustments: keep layout and functionality, scale visuals for tablets/phones */
+    @media (max-width: 1024px) {
+      header {
+        padding: 15px 30px;
+        gap: 20px;
+      }
+
+      .logo-box {
+        width: 80px;
+        height: 80px;
+      }
+
+      .pdti-subtitle {
+        font-size: 1rem;
+      }
+
+      .province-text {
+        font-size: 1.4rem;
+      }
+
+      .line {
+        width: 80px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 15px;
+        gap: 15px;
+      }
+
+      .logo-box {
+        width: 55px;
+        height: 55px;
+        padding: 6px;
+      }
+
+      .pdti-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+      }
+
+      .province-text {
+        font-size: 1rem;
+        letter-spacing: 2px;
+      }
+
+      .line {
+        width: 40px;
+      }
+
+      .zoom-group {
+        right: 15px;
+        bottom: 80px;
+        top: auto;
+      }
+
+      .photo-card {
+        width: 160px;
+        height: 110px;
+        border-width: 3px;
+        border-radius: 12px;
+      }
+
+      .p-mossam {
+        top: 18%;
+        left: 5%;
+      }
+
+      .p-hydro {
+        top: 18%;
+        right: 5%;
+      }
+
+      .p-port {
+        bottom: 15%;
+        left: 5%;
+      }
+
+      .p-plage {
+        bottom: 15%;
+        right: 5%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 8px 10px;
+        gap: 8px;
+      }
+
+      .logo-box {
+        width: 45px;
+        height: 45px;
+      }
+
+      .pdti-subtitle {
+        font-size: 0.65rem;
+        line-height: 1.2;
+      }
+
+      .province-text {
+        font-size: 0.9rem;
+        letter-spacing: 1.5px;
+      }
+
+      .line {
+        display: none;
+      }
+
+      .maroc-separator {
+        gap: 10px;
+      }
+
+      .photo-card {
+        width: 120px;
+        height: 85px;
+        border-width: 2px;
+        border-radius: 8px;
+      }
+
+      .p-mossam {
+        top: 15%;
+        left: 2%;
+      }
+
+      .p-hydro {
+        top: 15%;
+        right: 2%;
+      }
+
+      .p-port {
+        bottom: 12%;
+        left: 2%;
+      }
+
+      .p-plage {
+        bottom: 12%;
+        right: 2%;
+      }
+    }
+
+    /* --- NEW PREMIUM FLOATING PHOTOS --- */
+    .floating-photos {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .photo-card {
+      position: absolute;
+      pointer-events: auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
+      border: 6px solid white;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      animation: photoIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      background: white;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.8s ease;
+    }
+
+    .photo-card:hover {
+      transform: scale(1.05) translateY(-15px) rotate(1deg);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      border-color: var(--accent);
+    }
+
+    .photo-card:hover img {
+      transform: scale(1.1);
+    }
+
+    /* Positions according to reference */
+    .p-mossam {
+      top: 25%;
+      left: 10%;
+      width: 320px;
+      height: 200px;
+      animation-delay: 0.8s;
+    }
+
+    .p-port {
+      bottom: 25%;
+      left: 5%;
+      width: 280px;
+      height: 180px;
+      animation-delay: 1.1s;
+    }
+
+    .p-hydro {
+      top: 22%;
+      right: 12%;
+      width: 350px;
+      height: 220px;
+      animation-delay: 1.4s;
+    }
+
+    .p-plage {
+      bottom: 18%;
+      right: 32%;
+      width: 300px;
+      height: 190px;
+      animation-delay: 1.7s;
+    }
+
+    @keyframes photoIn {
+      from {
+        opacity: 0;
+        transform: scale(0.85) translateY(40px) rotate(-2deg);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0);
+      }
+    }
+
+    @media (max-width: 1366px) {
+      .photo-card {
+        width: 240px;
+        height: 160px;
+      }
+
+      .p-hydro {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      /* Les photos restent visibles et scale via les media queries spécifiques */
+    }
+  </style>
+</head>
+
+<body class="intro-mode">
+  <div class="bg-master"></div>
+
+  <div class="app-container">
+    <header>
+      <!-- Left Logo -->
+      <div class="logo-box logo-box-left">
+        <img src="img/logo_french.png" alt="Logo">
+      </div>
+
+      <!-- Center Content -->
+      <div class="header-center">
+        <div class="pdti-subtitle">PDTI Tan-Tan, Vers un territoire inclusif, durable et attractif</div>
+        <div class="maroc-separator">
+          <span class="line"></span>
+          <span class="province-text"></span>
+          <span class="line"></span>
+        </div>
+      </div>
+
+      <!-- Right Logo -->
+      <div class="logo-box logo-box-right">
+        <img src="img/logo_arabe.png" alt="Logo">
+      </div>
+    </header>
+
+    <div id="map-wrapper">
+      <div id="ma-carte"></div>
+    </div>
+
+    <!-- Floating Showcase Photos -->
+    <div class="floating-photos">
+      <div class="photo-card p-mossam" title="Moussem de Tan-Tan">
+        <img src="img/mossam.png" alt="Moussem">
+      </div>
+      <div class="photo-card p-port" title="Port de Tan-Tan">
+        <img src="img/port.png" alt="Port">
+      </div>
+      <div class="photo-card p-hydro" title="Hydrogène Vert & Énergies">
+        <img src="img/hydrojine.png" alt="Hydrogène">
+      </div>
+      <div class="photo-card p-plage" title="Plages de Tan-Tan">
+        <img src="img/plage.png" alt="Plage">
+      </div>
+    </div>
+
+    <div class="zoom-group">
+      <button class="btn-zoom" onclick="map.zoomIn()"><i class="fa-solid fa-plus"></i></button>
+      <button class="btn-zoom" onclick="map.zoomOut()"><i class="fa-solid fa-minus"></i></button>
+    </div>
+
+
+
+    <footer style="color: #64748b;">
+      &copy; 2025 - D.S.I.C PROVINCE TAN-TAN
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map("ma-carte", {
+      attributionControl: false,
+      zoomControl: false,
+      zoomSnap: 0.1,
+      zoomDelta: 0.5
+    });
+
+    // Intro Animation Timer with Smooth Transition
+    setTimeout(() => {
+      const header = document.querySelector('header');
+      const startHeight = window.innerHeight;
+
+      // 1. Lock height to prevent snapping
+      header.style.height = startHeight + 'px';
+
+      // 2. Remove class to get target state capability
+      document.body.classList.remove('intro-mode');
+
+      // 3. Measure target height (natural size)
+      // We momentarily strict set to auto to measure
+      const currentTransition = header.style.transition;
+      header.style.transition = 'none'; // Disable transition for measurement
+      header.style.height = 'auto';
+      const targetHeight = header.offsetHeight;
+
+      // 4. Restore start state
+      header.style.height = startHeight + 'px';
+      header.offsetHeight; // Force reflow
+
+      // 5. Enable transition and animate to target
+      header.style.transition = 'height 1.5s cubic-bezier(0.85, 0, 0.15, 1), padding 1.5s ease';
+      header.style.height = targetHeight + 'px';
+
+      // 6. Cleanup after animation
+      header.addEventListener('transitionend', () => {
+        header.style.height = null;
+        header.style.transition = ''; // Revert to CSS stylesheet transition
+      }, { once: true });
+
+    }, 1000);
+
+    map.createPane("paneMaroc");
+    map.getPane("paneMaroc").style.zIndex = 400;
+    map.createPane("paneTanTan");
+    map.getPane("paneTanTan").style.zIndex = 450;
+
+    // 1. Fond Maroc
+    fetch("maroc.geojson")
+      .then(r => r.json())
+      .then(data => {
+        var layerMaroc = L.geoJSON(data, {
+          pane: "paneMaroc",
+          style: {
+            fillColor: "#ffffff",
+            color: "#64748b",
+            weight: 1,
+            fillOpacity: 0.8
+          },
+          interactive: false
+        }).addTo(map);
+
+        // Initial fit to center Morocco
+        map.fitBounds(layerMaroc.getBounds(), { padding: [100, 100] });
+      });
+
+    // 2. Province Tan-Tan
+    fetch("province_tantan.geojson")
+      .then(r => r.json())
+      .then(data => {
+        var layerTanTan = L.geoJSON(data, {
+          pane: "paneTanTan",
+          style: {
+            fillColor: "#7dd3fc", // Light Blue as requested
+            color: "#1e3a8a", // Deep Blue
+            weight: 3,
+            fillOpacity: 0.8,
+            className: "tantan-pulse"
+          },
+          onEachFeature: function (feature, layer) {
+            layer.on("click", () => window.location.href = "tantan.html");
+            layer.on("mouseover", function () {
+              this.setStyle({ fillColor: "#38bdf8", weight: 5, fillOpacity: 0.9 });
+              document.getElementById("ma-carte").style.cursor = "pointer";
+            });
+            layer.on("mouseout", function () {
+              this.setStyle({ fillColor: "#7dd3fc", weight: 3, fillOpacity: 0.8 });
+              document.getElementById("ma-carte").style.cursor = "";
+            });
+          }
+        }).addTo(map);
+
+        // Tooltip & Location Icon
+        var centre = layerTanTan.getBounds().getCenter();
+
+        // Localization Icon (L.divIcon)
+        var locationIcon = L.divIcon({
+          html: '<i class="fa-solid fa-location-dot custom-marker-icon"></i>',
+          className: 'custom-div-icon',
+          iconSize: [30, 42],
+          iconAnchor: [15, 42]
+        });
+
+        var marker = L.marker(centre, { icon: locationIcon }).addTo(map);
+        marker.bindTooltip("Province de Tan-Tan", {
+          permanent: true,
+          direction: "left",
+          offset: [-20, 0],
+          className: "mon-label"
+        }).openTooltip();
+
+        marker.on("click", () => window.location.href = "tantan.html");
+      });
+  </script>
+</body>
+
+</html>

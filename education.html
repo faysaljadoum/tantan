@@ -1,0 +1,3335 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Éducation - Province de Tan-Tan</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --accent: #0ea5e9;
+            --glass: rgba(255, 255, 255, 0.75);
+            --glass-strong: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.45);
+            --shadow-wow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+            --glow-color: rgba(14, 165, 233, 0.5);
+            --color-urbain: #1e3a8a;
+            --color-rural: #0ea5e9;
+            --alert-red: #e11d48;
+            --bar-commune: #1e3a8a;
+            --bar-region: #0ea5e9;
+            --bar-national: #94a3b8;
+            --bar-ouatia: #0369a1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Master Background --- */
+        .bg-master {
+            position: fixed;
+            inset: 0;
+            background: url('img/sahara_maroc.jpeg') center/cover no-repeat;
+            z-index: -1;
+            filter: saturate(0.9) brightness(1);
+            animation: bgPan 80s infinite alternate linear;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(241, 245, 249, 0.88);
+            backdrop-filter: blur(12px);
+            z-index: -1;
+        }
+
+        @keyframes bgPan {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.15) translate(-2%, -1%);
+            }
+        }
+
+        /* --- Premium Header --- */
+        header {
+            padding: 15px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(30, 58, 138, 0.1);
+            z-index: 2000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            animation: slideDown 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .header-center {
+            text-align: center;
+        }
+
+        .pdti-subtitle {
+            font-size: 1rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #0ea5e9, #1e3a8a);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shineText 4s linear infinite;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        @keyframes shineText {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .maroc-separator {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .province-text {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 1.3rem;
+            color: #1a365d;
+            letter-spacing: 3px;
+        }
+
+        .line {
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--accent), transparent);
+            flex: 1;
+            width: 100px;
+            opacity: 0.6;
+        }
+
+        .logo-box {
+            width: 70px;
+            height: 70px;
+            background: #e0faff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .logo-box::before {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #0ea5e9, #0ea5e9);
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .logo-box:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(14, 165, 233, 0.2);
+        }
+
+        .logo-box img {
+            width: 75%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .header-actions {
+            position: absolute;
+            right: 40px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-premium {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(30, 58, 138, 0.2);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.3);
+            background: #2563eb;
+        }
+
+        /* --- Middle Container --- */
+        .middle-container {
+            flex: 1;
+            display: flex;
+            padding: 20px 30px;
+            gap: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .side-panel {
+            width: 350px;
+            position: relative;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 25px 20px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 35px;
+            box-shadow: var(--shadow-wow);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(30, 58, 138, 0.2) transparent;
+        }
+
+        .side-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .side-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .side-panel::-webkit-scrollbar-thumb {
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 10px;
+        }
+
+        .side-panel:hover::-webkit-scrollbar-thumb {
+            background: rgba(30, 58, 138, 0.25);
+        }
+
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            border-radius: 35px;
+            overflow: hidden;
+            box-shadow: var(--shadow-wow);
+            border: 1px solid var(--glass-border);
+            background: white;
+        }
+
+        #map-detail {
+            width: 100%;
+            height: 100%;
+            transition: filter 0.5s ease;
+        }
+
+        /* --- Stats Cards --- */
+        .ui-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            animation: cardFadeIn 0.8s ease backwards;
+            margin-bottom: 10px;
+        }
+
+        @keyframes cardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ui-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border-color: var(--accent);
+        }
+
+        .indicator-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .indicator-icon {
+            width: 35px;
+            height: 35px;
+            background: #eff6ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .indicator-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        /* Alert Styling */
+        .alert-card-modern {
+            border-left: 5px solid var(--alert-red);
+            position: relative;
+            /* overflow: hidden; Removed to fix cutoff issue */
+        }
+
+        .alert-card-modern::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at top right, rgba(225, 29, 72, 0.05), transparent);
+        }
+
+        .alert-header-modern {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .alert-icon-circle {
+            width: 30px;
+            height: 30px;
+            background: var(--alert-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 0.8rem;
+        }
+
+        .alert-subtitle {
+            font-size: 0.65rem;
+            color: var(--alert-red);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .alert-commune-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .metric-box {
+            background: #fff1f2;
+            border-radius: 18px;
+            padding: 15px;
+            border: 1px solid rgba(225, 29, 72, 0.1);
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #be123c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-val {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--alert-red);
+        }
+
+        .metric-txt {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .progress-bg {
+            height: 8px;
+            background: rgba(225, 29, 72, 0.1);
+            border-radius: 10px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--alert-red);
+            border-radius: 10px;
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Urbain Specific */
+        .card-urbain-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.1);
+        }
+
+        .urbain-data-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .urbain-icon-box {
+            width: 45px;
+            height: 45px;
+            background: #f0f7ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .urbain-data-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .btn-select-city {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 12px;
+            border-radius: 12px;
+            color: #64748b;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .table-tantan {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-tantan td {
+            padding: 12px;
+            border: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+            background: #fff;
+        }
+
+        .table-tantan td:first-child {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        /* Charts */
+        .chart-container-tantan {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.65rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .chart-main {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 120px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+            position: relative;
+        }
+
+        .cycle-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .bars-flex {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bar-value {
+            font-size: 0.6rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #475569;
+        }
+
+        .bar {
+            width: 12px;
+            border-radius: 4px 4px 0 0;
+            height: 0;
+            transition: height 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .cycle-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-top: 8px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .red-banner {
+            background: var(--alert-red);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            margin: 10px 0;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.2);
+        }
+
+        /* Filter Buttons Sidebar */
+        .filter-container-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-filter-left {
+            flex: 1;
+            background: white;
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .btn-filter-left:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+            border-color: var(--accent);
+        }
+
+        .btn-commune-urbaine {
+            flex: 1;
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-commune-urbaine:hover,
+        .btn-commune-urbaine.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* --- Educational Analytics CSS (Image 1 & 2) --- */
+        .chart-box-edu {
+            margin-top: 15px;
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .chart-box-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+
+        /* Stacked Vertical Bar Chart */
+        .stacked-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 160px;
+            padding-top: 25px;
+        }
+
+        .stacked-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 75px;
+        }
+
+        .stacked-bar-container {
+            width: 38px;
+            display: flex;
+            flex-direction: column-reverse;
+            background: #f1f5f9;
+            border-radius: 10px;
+            position: relative;
+            /* Label visibility fix */
+            overflow: visible;
+            height: 120px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .bar-segment {
+            width: 100%;
+            position: relative;
+            transition: height 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .segment-val {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #1e3a8a;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .bar-segment.public {
+            background: linear-gradient(to top, var(--primary), var(--accent));
+            border-radius: 0 0 10px 10px;
+        }
+
+        .bar-segment.prive {
+            background: linear-gradient(to top, #ea580c, #fb923c);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .group-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-top: 10px;
+            color: #475569;
+        }
+
+        /* Horizontal Comparison Bars */
+        .h-bar-row {
+            margin-bottom: 18px;
+        }
+
+        .h-bar-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .h-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .h-bar-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .h-bar-wrapper-flex {
+            flex: 1;
+            height: 10px;
+            background: #f1f5f9;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .h-bar {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .h-bar.province {
+            background: linear-gradient(to right, #0ea5e9, #38bdf8);
+        }
+
+        .h-bar.region {
+            background: linear-gradient(to right, #f97316, #fb923c);
+        }
+
+        .h-bar.national {
+            background: linear-gradient(to right, #94a3b8, #cbd5e1);
+        }
+
+        .h-bar-val {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #1e3a8a;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Stats Grid */
+        .side-panel {
+            width: 360px;
+            position: relative;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            /* Ensure it takes full height for scrolling */
+            min-height: 0;
+            /* Important for flex child scrolling */
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: var(--shadow-premium);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .edu-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .edu-stat-box {
+            background: white;
+            border-radius: 18px;
+            padding: 12px 8px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.05);
+            border: 1px solid rgba(2, 132, 199, 0.08);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .edu-stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .edu-stat-title {
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #1e3a8a, #0284c7);
+            padding: 8px 4px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 15px rgba(2, 132, 199, 0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .edu-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 5px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+            background: rgba(2, 132, 199, 0.02);
+            transition: all 0.3s ease;
+            min-width: 0;
+        }
+
+        .edu-stat-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .edu-stat-value {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #0284c7;
+            padding: 2px 5px;
+            background: #f0f9ff;
+            border-radius: 4px;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .edu-stat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dot-prov {
+            background: #f43f5e;
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+        }
+
+        .dot-reg {
+            background: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .dot-nat {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .edu-footer-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 22px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        .edu-footer-info:hover {
+            transform: scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
+        }
+
+        .edu-footer-icon {
+            font-size: 1.8rem;
+            color: var(--primary);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .edu-footer-text {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #1e3a8a;
+            letter-spacing: -0.2px;
+        }
+
+        /* --- Map Overlay & Isolation --- */
+        #map-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            z-index: 500;
+            transition: 0.4s;
+            border-radius: 35px;
+        }
+
+        #map-overlay.active {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            pointer-events: auto;
+        }
+
+        #isolated-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 80%;
+            height: 80%;
+            z-index: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #isolated-box.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #isolated-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.2));
+        }
+
+        /* --- Pill Navigation --- */
+        .bottom-nav {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            gap: 15px;
+            background: rgba(226, 232, 240, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 12px 30px;
+            border-radius: 100px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: slideUpNav 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
+        }
+
+        @keyframes slideUpNav {
+            from {
+                transform: translate(-50%, 100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            color: #334155;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn i {
+            font-size: 1.1rem;
+            color: #57595a;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active,
+        .nav-btn.active i {
+            background: rgba(14, 165, 233, 0.12);
+            color: #1e3a8a;
+            transform: translateY(-2px);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            /* Prevent clipping */
+            z-index: 5000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 35px;
+            width: 90%;
+            max-width: 800px;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-wow);
+            transform: scale(0.9);
+            transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: modalPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalPop {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* Pop-Out Animation (Detaching from Map) */
+        @keyframes communePopOut {
+            0% {
+                transform: translate(0, 0) scale(1);
+                filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+            }
+
+            100% {
+                transform: translate(-15px, -15px) scale(1.08);
+                filter: drop-shadow(20px 20px 30px rgba(0, 0, 0, 0.4));
+            }
+        }
+
+        .pop-active {
+            animation: communePopOut 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            z-index: 100;
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 25px;
+            /* Compact */
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .modal-body {
+            padding: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .popup-alert-item {
+            background: #f8fafc;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            color: #1e3a8a;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ciblage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            padding: 10px;
+        }
+
+        .ciblage-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ciblage-title {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            border-radius: 14px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 5px;
+        }
+
+        .diag-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 22px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 6px solid #ccc;
+            height: 100%;
+        }
+
+        .diag-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+        }
+
+        .diag-prob {
+            background: #fff5f5;
+            border-left-color: #a41c1c;
+        }
+
+        .diag-target {
+            background: #f0fdf4;
+            border-left-color: #1c7430;
+        }
+
+        .diag-icon-box {
+            font-size: 1.35rem;
+            width: 40px;
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .diag-prob .diag-icon-box {
+            color: #a41c1c;
+        }
+
+        .diag-target .diag-icon-box {
+            color: #1c7430;
+        }
+
+        .diag-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .diag-prob .diag-text {
+            color: #8a1717;
+        }
+
+        .diag-target .diag-text {
+            color: #155724;
+        }
+
+        .prob-text {
+            color: #be123c;
+        }
+
+        .obj-text {
+            color: #15803d;
+        }
+
+        /* --- New Header Buttons --- */
+        .btn-header-pill {
+            background: white;
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50px;
+            border: 1px solid rgba(30, 58, 138, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .btn-header-pill i {
+            font-size: 1.25rem;
+            z-index: 2;
+        }
+
+        .btn-header-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-header-pill:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
+            border-color: var(--accent);
+        }
+
+        .btn-header-pill:hover::before {
+            opacity: 1;
+        }
+
+        /* Specific Hover Themes */
+        .btn-home:hover {
+            color: #1e3a8a;
+        }
+
+        .btn-reset:hover {
+            color: #d97706;
+        }
+
+        /* Orange for reset */
+        .btn-diag:hover {
+            color: #e11d48;
+        }
+
+        /* Red for diag */
+
+        /* --- Diagnostic Modal Animation Styles --- */
+        .diag-row-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none;
+            /* Hidden by default until active */
+        }
+
+        .diag-row-container.active-row {
+            opacity: 1;
+            transform: translateY(0);
+            display: grid;
+        }
+
+        .diag-cell {
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            height: 100%;
+        }
+
+        .diag-prob-new {
+            background: #fff1f2;
+            border-left: 4px solid #be123c;
+        }
+
+        .diag-target-new {
+            background: #f0fdf4;
+            border-left: 4px solid #15803d;
+        }
+
+        .diag-icon-new {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .diag-text-new {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-master"></div>
+    <div class="bg-overlay"></div>
+
+    <header>
+        <div class="logo-box" onclick="location.href='index.html'">
+            <img src="img/logo_french.png" alt="Logo">
+        </div>
+        <div class="header-center">
+            <div class="pdti-subtitle">PDTI Tan-Tan | Vers un territoire inclusif, durable et attractif</div>
+            <div class="maroc-separator">
+                <span class="line"></span>
+                <span class="province-text">AXE Éducation</span>
+                <span class="line"></span>
+            </div>
+        </div>
+        <div class="logo-box" onclick="location.href='index.html'">
+            <img src="img/logo_arabe.png" alt="Logo">
+        </div>
+        <div class="header-actions">
+            <!-- Diagnostic Button -->
+            <button onclick="showCiblage()" class="btn-header-pill btn-diag" title="Diagnostic Éducatif">
+                <i class="fa-solid fa-bullseye"></i>
+            </button>
+
+            <!-- Accueil Button -->
+            <button class="btn-header-pill btn-home" onclick="location.href='tantan.html'" title="Retour à l'Accueil">
+                <i class="fa-solid fa-house"></i>
+            </button>
+
+            <!-- Reset Button -->
+            <button class="btn-header-pill btn-reset" onclick="location.reload()" title="Réinitialiser la vue">
+                <i class="fa-solid fa-rotate"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="middle-container">
+        <!-- Left Panel -->
+        <div class="side-panel">
+            <div class="filter-container-left">
+                <div class="filter-row">
+                    <button class="btn-filter-left" onclick="isolateGroup('urbain')">
+                        <div style="width:12px; height:12px; border-radius:50%; background: var(--color-urbain);"></div>
+                        Urbain
+                    </button>
+                    <button class="btn-filter-left" onclick="isolateGroup('rural')">
+                        <div style="width:12px; height:12px; border-radius:50%; background: var(--color-rural);"></div>
+                        Rural
+                    </button>
+                </div>
+                <!-- Sub Filter for Urbain -->
+                <div id="sub-filter-urbain" class="filter-row" style="display: none; margin-top: 5px;">
+                    <button id="btn-tantan" class="btn-commune-urbaine" onclick="showTanTanDetails()">Tan-Tan</button>
+                    <button id="btn-elouatia" class="btn-commune-urbaine" onclick="showElOuatiaDetails()">El
+                        Ouatia</button>
+                </div>
+            </div>
+            <div id="panel-left-content"></div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map-container">
+            <div id="map-detail"></div>
+            <div id="map-overlay"></div>
+            <div id="isolated-box"><svg id="isolated-svg" preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="side-panel" id="panel-right">
+
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="education.html" class="nav-btn active"><i class="fa-solid fa-graduation-cap"></i> ÉDUCATION</a>
+        <a href="sante.html" class="nav-btn"><i class="fa-solid fa-hospital-user"></i> SANTÉ</a>
+        <a href="eau.html" class="nav-btn"><i class="fa-solid fa-droplet"></i> EAU</a>
+        <a href="mise_a_niveau.html" class="nav-btn"><i class="fa-solid fa-road"></i> MAN</a>
+        <a href="emploi.html" class="nav-btn"><i class="fa-solid fa-briefcase"></i> EMPLOI</a>
+    </div>
+
+    <!-- Modal Popup -->
+    <div id="alertPopup" class="modal-overlay" onclick="closePopupCiblage()">
+        <div class="modal-content" id="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div><i class="fa-solid fa-triangle-exclamation"></i> <span id="popup-title">ALERTE</span></div>
+                <span style="cursor:pointer; font-size: 24px;" onclick="closePopupCiblage()">&times;</span>
+            </div>
+            <div class="modal-body" id="popup-body"></div>
+        </div>
+    </div>
+
+    <!-- New Programme Popup -->
+    <div id="programmePopup" class="modal-overlay" onclick="closeProgrammePopup()">
+        <div class="modal-content" id="prog-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div><i class="fa-solid fa-list-check"></i> <span id="prog-popup-title">PROGRAMME PRIORITAIRE
+                        2026</span></div>
+                <span style="cursor:pointer; font-size: 24px;" onclick="closeProgrammePopup()">&times;</span>
+            </div>
+            <div class="modal-body" id="prog-popup-body"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map("map-detail", { zoomControl: false, attributionControl: false, zoomSnap: 0.1 });
+        const ruralNames = ["Chbika", "Abteh", "Msied", "Tilemzoun", "Ben Khelil"];
+        const urbainNames = ["Tan-Tan", "El Ouatia"];
+        let layersMap = {};
+
+        function animateProgress() {
+            setTimeout(() => {
+                document.querySelectorAll('.progress-fill').forEach(el => {
+                    el.style.width = el.getAttribute('data-width');
+                });
+                document.querySelectorAll('.bar').forEach(el => {
+                    el.style.height = el.getAttribute('data-height');
+                });
+            }, 100);
+        }
+
+        function showRuralLeft() {
+            document.getElementById('sub-filter-urbain').style.display = 'none';
+            document.getElementById('panel-right').innerHTML = `
+                
+            `;
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="ui-card" onclick="showRuralRight()">
+                    <div class="card-urbain-header">Milieu Rural</div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-landmark"></i></div><div class="indicator-label">05 communes rurales</div></div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-map-location-dot"></i></div><div class="indicator-label">17 255 km² de territoire</div></div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-users-rays"></i></div><div class="indicator-label">4 127 Habitants</div></div>
+                </div>
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 100%; margin: 20px auto; border: 2px solid #1e3a8a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background-color: #ffffff;">
+
+    
+
+  
+
+
+
+    <div style="padding: 20px; color: #334155;">
+
+        <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+            <i class="fas fa-child" style="color: #1e3a8a; width: 25px;"></i>
+
+            <span style="font-size: 1rem; font-weight: 500;">03 Unités du préscolaire</span>
+
+        </div>
+
+
+
+        <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+            <i class="fas fa-school" style="color: #1e3a8a; width: 25px;"></i>
+
+            <span style="font-size: 1rem; font-weight: 500;">02 Ecoles primaires</span>
+
+        </div>
+
+
+
+        <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+            <i class="fas fa-building" style="color: #1e3a8a; width: 25px;"></i>
+
+            <span style="font-size: 1rem; font-weight: 500;">03 Ecoles satellites</span>
+
+        </div>
+
+
+
+        <div style="display: flex; align-items: center; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+            <i class="fas fa-university" style="color: #1e3a8a; width: 25px;"></i>
+
+            <span style="font-size: 1rem; font-weight: 500;">01 noyau collégial</span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            `;
+            showRuralRight();
+        }
+
+        function showRuralRight() {
+            document.getElementById('panel-right').innerHTML = `
+               <div class="ui-card alert-card-modern" onclick="showGraphPopup('rural-abandon')" style="cursor: pointer;">
+                    <div class="alert-header-modern">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--alert-red); font-size:24px;"></i>
+                        <span class="alert-commune-name">Points saillants</span>
+                    </div>
+                    
+                    <!-- Card 1: Abandon Scolaire -->
+                    <div class="red-banner" style="background:#be123c; margin-bottom: 20px;">Taux d’abandon scolaire</div>
+                    
+                    <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:25px; padding:0 10px 10px;">
+                        
+                        <!-- Legend -->
+                        <div style="display:flex; justify-content:center; gap:15px; margin-bottom:10px; font-size:0.7rem; font-weight:700;">
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#94a3b8; border-radius:3px;"></div> National</div>
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#f97316; border-radius:3px;"></div> Région</div>
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#3b82f6; border-radius:3px;"></div> Province</div>
+                        </div>
+
+                        <!-- Collégial -->
+                        <div>
+                            <div style="font-weight:800; font-size:0.8rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                <span style="width:4px; height:14px; background:#1e293b; border-radius:2px;"></span> Collégial
+                            </div>
+                            <!-- Bars -->
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- National 9.22 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="61%" style="background:#94a3b8; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:63%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">9.22</span>
+                                    </div>
+                                </div>
+                                <!-- Region 3.45 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="23%" style="background:#f97316; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:25%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">3.45</span>
+                                    </div>
+                                </div>
+                                <!-- Province 11.43 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="76%" style="background:#3b82f6; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:78%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">11.43</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primaire -->
+                        <div>
+                             <div style="font-weight:800; font-size:0.8rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                <span style="width:4px; height:14px; background:#1e293b; border-radius:2px;"></span> Primaire
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- National 2.36 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="16%" style="background:#94a3b8; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:18%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">2.36</span>
+                                    </div>
+                                </div>
+                                <!-- Region 0.97 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="7%" style="background:#f97316; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:9%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">0.97</span>
+                                    </div>
+                                </div>
+                                <!-- Province 1.56 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="11%" style="background:#3b82f6; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:13%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">1.56</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Card 2: Redoublement (Green) -->
+                <div class="ui-card alert-card-modern" style="border-left-color: #15803d; cursor: pointer;" onclick="showGraphPopup('rural-redoublement')">
+                    <div class="red-banner" style="background:#15803d; margin-bottom: 20px;">Taux de redoublement</div>
+                    
+                     <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:25px; padding:0 10px 10px;">
+                        
+                        <!-- Legend -->
+                       <div style="display:flex; justify-content:center; gap:15px; margin-bottom:10px; font-size:0.7rem; font-weight:700;">
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#94a3b8; border-radius:3px;"></div> National</div>
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#f97316; border-radius:3px;"></div> Région</div>
+                            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#3b82f6; border-radius:3px;"></div> Province</div>
+                        </div>
+
+                        <!-- Collégial -->
+                        <div>
+                             <div style="font-weight:800; font-size:0.8rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                <span style="width:4px; height:14px; background:#1e293b; border-radius:2px;"></span> Collégial
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- National 12.26 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="81%" style="background:#94a3b8; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:83%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">12.26</span>
+                                    </div>
+                                </div>
+                                <!-- Region 7.03 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="47%" style="background:#f97316; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:49%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">7.03</span>
+                                    </div>
+                                </div>
+                                <!-- Province 14.29 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="95%" style="background:#3b82f6; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:97%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">14.29</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primaire -->
+                        <div>
+                             <div style="font-weight:800; font-size:0.8rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                <span style="width:4px; height:14px; background:#1e293b; border-radius:2px;"></span> Primaire
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- National 6.73 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="44%" style="background:#94a3b8; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:46%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">6.73</span>
+                                    </div>
+                                </div>
+                                <!-- Region 4.1 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="27%" style="background:#f97316; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:29%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">4.1</span>
+                                    </div>
+                                </div>
+                                <!-- Province 3.91 -->
+                                <div style="display:flex; align-items:center; height:16px;">
+                                    <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:4px; height:100%; position:relative;">
+                                        <div class="progress-fill" data-width="26%" style="background:#3b82f6; position:absolute; left:0; width:0;"></div>
+                                        <span style="position:absolute; left:28%; font-size:0.7rem; font-weight:800; color:#475569; line-height:16px;">3.91</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Card 3: Taux de préscolarité (Brown) -->
+                <div class="ui-card alert-card-modern" style="border-left-color: #a41c1c; cursor: pointer;" onclick="showGraphPopup('rural-prescolaire')">
+                    <div class="red-banner" style="background:#a41c1c; margin-bottom: 70px;">Taux de préscolarité</div>
+                    
+                    <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:25px; padding:0 10px 20px;">
+                        <div class="chart-main" style="display: flex; justify-content: space-around; align-items: flex-end; height: 120px; border-bottom: 2px solid #e2e8f0; padding-bottom: 35px;">
+                            <!-- Ensemble 81% -->
+                            <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="font-size: 0.9rem; font-weight: 800; color: #1e293b; margin-bottom: 5px;">81%</span>
+                                    <div class="bar" data-height="81px" style="width: 40px; border-radius: 8px 8px 0 0; background: #a41c1c; height: 0; transition: height 1s ease-out;"></div>
+                                </div>
+                                <div style="font-size: 0.75rem; font-weight: 800; color: #64748b;">Ensemble</div>
+                            </div>
+                            <!-- Urbain 82% -->
+                            <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="font-size: 0.9rem; font-weight: 800; color: #1e293b; margin-bottom: 5px;">82%</span>
+                                    <div class="bar" data-height="82px" style="width: 40px; border-radius: 8px 8px 0 0; background: #a41c1c; height: 0; transition: height 1s ease-out;"></div>
+                                </div>
+                                <div style="font-size: 0.75rem; font-weight: 800; color: #64748b;">Urbain</div>
+                            </div>
+                            <!-- Rural 54% -->
+                            <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="font-size: 0.9rem; font-weight: 800; color: #1e293b; margin-bottom: 5px;">54%</span>
+                                    <div class="bar" data-height="54px" style="width: 40px; border-radius: 8px 8px 0 0; background: #a41c1c; height: 0; transition: height 1s ease-out;"></div>
+                                </div>
+                                <div style="font-size: 0.75rem; font-weight: 800; color: #64748b;">Rural</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            animateProgress();
+        }
+
+        function showUrbainLeft() {
+            document.getElementById('sub-filter-urbain').style.display = 'flex';
+            document.getElementById('panel-right').innerHTML = `
+                
+            `;
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="ui-card">
+                    <div class="card-urbain-header">Milieu Urbain</div>
+                    <div class="urbain-data-row">
+                        <div class="urbain-icon-box"><i class="fa-solid fa-city"></i></div>
+                        <div class="urbain-data-text">02 Communes</div>
+                    </div>
+                    <div class="urbain-data-row">
+                        <div class="urbain-icon-box"><i class="fa-solid fa-users"></i></div>
+                        <div class="urbain-data-text">90 392 Habitants (96%)</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showTanTanDetails() {
+            document.getElementById('btn-tantan').classList.add('active');
+            document.getElementById('btn-elouatia').classList.remove('active');
+
+            highlightSVGCommune('Tan-Tan');
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="ui-card" onclick="showTanTanRight()">
+                    <div class="card-urbain-header">Ville Tan-Tan</div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-building-columns"></i></div><div class="indicator-label">Tan-Tan (Chef-lieu)</div></div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-map-location-dot"></i></div><div class="indicator-label">Superficie : 25 km²</div></div>
+                    <div class="indicator-row">
+                    <div class="urbain-icon-box"><i class="fa-solid fa-users"></i></div>
+                    <div class="indicator-label">76 134 Habitants (80%)</div></div>
+            
+                </div>
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 400px; margin: 20px auto; border: 2px solid #1e3a8a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background-color: #ffffff;">
+                <div style="padding: 20px; color: #334155;">
+
+                    
+
+
+
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-school" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">18 Ecoles primaires</span>
+
+                    </div>
+                    <div style="display: flex; align-items: center; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-university" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">08 Lycées collégiaux</span>
+
+                    </div>
+
+
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-building" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">07 Lycée qualifiant</span>
+
+                    </div>
+                     
+
+                </div>
+
+            </div>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+                `;
+            showTanTanRight(); // Auto show right panel
+        }
+
+        function showTanTanRight() {
+            document.getElementById('panel-right').innerHTML = `
+                <div class="ui-card alert-card-modern" onclick="showGraphPopup('redoublement')" style="cursor: pointer;">
+                    <div class="alert-header-modern">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--alert-red); font-size:24px;"></i>
+                        <span class="alert-commune-name">Points saillants</span>
+                    </div>
+                    <div class="red-banner">Taux de redoublement élevé Au niveau de tous les cycles (%)</div>
+                    <div class="chart-container-tantan">
+                        <div class="chart-legend">
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-commune)"></div> Com.</div>
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-region)"></div> Rég.</div>
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-national)"></div> Nat.</div>
+                        </div>
+                        <div class="chart-main">
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">5.5</span><div class="bar" data-height="35px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">4.1</span><div class="bar" data-height="25px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">5.8</span><div class="bar" data-height="37px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Prim.</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">11.9</span><div class="bar" data-height="80px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">9.3</span><div class="bar" data-height="65px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">11.9</span><div class="bar" data-height="80px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Coll.</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">7.7</span><div class="bar" data-height="55px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">4.8</span><div class="bar" data-height="35px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">7.1</span><div class="bar" data-height="50px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Sec.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-card alert-card-modern" onclick="showGraphPopup('abandon')" style="cursor: pointer;">
+                    <div class="red-banner">Taux d’abandon scolaire (%)</div>
+                    <div class="chart-container-tantan">
+                        <div class="chart-legend">
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-commune)"></div> Com.</div>
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-region)"></div> Rég.</div>
+                            <div class="legend-item"><div class="legend-color" style="background:var(--bar-national)"></div> Nat.</div>
+                        </div>
+                        <div class="chart-main">
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">1.16</span><div class="bar" data-height="15px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">1.1</span><div class="bar" data-height="14px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">1.98</span><div class="bar" data-height="19px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Prim.</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">4.12</span><div class="bar" data-height="45px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">4</span><div class="bar" data-height="40px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">7.55</span><div class="bar" data-height="75px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Coll.</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bars-flex">
+                                    <div class="bar-wrapper"><span class="bar-value">3.73</span><div class="bar" data-height="35px" style="background:var(--bar-commune)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">3.2</span><div class="bar" data-height="32px" style="background:var(--bar-region)"></div></div>
+                                    <div class="bar-wrapper"><span class="bar-value">5.35</span><div class="bar" data-height="53px" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="cycle-label">Sec.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-card alert-card-modern">
+                    <div class="alert-header-modern">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--alert-red); font-size:24px;"></i>
+                        <span class="alert-commune-name">Absence d’établissements d’enseignement supérieur</span>
+                    </div>
+                </div>
+            `;
+            animateProgress();
+        }
+        function showGraphPopup(type) {
+            const modal = document.getElementById('alertPopup');
+            const title = document.getElementById('popup-title');
+            const body = document.getElementById('popup-body');
+            const contentBox = document.getElementById('modal-content');
+
+            contentBox.style.maxWidth = "950px";
+            document.querySelector('.modal-header').style.background = "var(--primary)";
+
+            const bigGraphStyle = `
+                <style>
+                    .big-chart-container {
+                        background: #fff;
+                        border-radius: 25px;
+                        padding: 40px;
+                        border: 2px solid #f1f5f9;
+                        overflow: hidden;
+                    }
+                    .big-chart-main {
+                        display: flex;
+                        justify-content: space-around;
+                        align-items: flex-end;
+                        height: 460px; /* Increased from 400px to prevent legend overlap */
+                        border-bottom: 3px solid #e2e8f0;
+                        padding-bottom: 15px;
+                        gap: 30px;
+                    }
+                    .big-bars-flex {
+                        display: flex;
+                        align-items: flex-end;
+                        gap: 20px;
+                    }
+                    .big-bar-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        width: 70px;
+                        position: relative;
+                    }
+                    .big-bar {
+                        width: 42px;
+                        border-radius: 12px 12px 0 0;
+                        transition: height 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+                        position: relative;
+                        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+                        height: 0;
+                    }
+                    .big-bar-value {
+                        font-size: 1.5rem;
+                        font-weight: 900;
+                        margin-bottom: 12px;
+                        color: #1e293b;
+                        text-align: center;
+                        opacity: 0;
+                        transition: opacity 0.6s ease-out;
+                    }
+                    .big-cycle-label {
+                        font-size: 1.2rem;
+                        font-weight: 900;
+                        margin-top: 25px;
+                        color: #1e293b;
+                        text-transform: uppercase;
+                        text-align: center;
+                        letter-spacing: 1.5px;
+                    }
+                    .big-legend {
+                        display: flex;
+                        justify-content: center;
+                        gap: 50px;
+                        margin-bottom: 45px;
+                        font-size: 1.1rem;
+                        font-weight: 800;
+                        color: #475569;
+                    }
+                    .legend-pill-big {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .legend-color-big {
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    }
+                </style>
+            `;
+
+            let graphHTML = "";
+
+            if (type === 'redoublement') {
+                title.innerHTML = "POINTS SAILLANTS : TAUX DE REDOUBLEMENT (%)";
+                graphHTML = `
+                    ${bigGraphStyle}
+                    <div class="big-chart-container">
+                        <div class="big-legend">
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-commune)"></div> Com.</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-region)"></div> Rég.</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-national)"></div> Nat.</div>
+                        </div>
+                        <div class="big-chart-main">
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="5.5">0</div><div class="big-bar" data-target="150" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="4.1">0</div><div class="big-bar" data-target="110" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="5.8">0</div><div class="big-bar" data-target="158" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Primaire</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="11.9">0</div><div class="big-bar" data-target="320" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="9.3">0</div><div class="big-bar" data-target="250" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="11.9">0</div><div class="big-bar" data-target="320" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Collégial</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="7.7">0</div><div class="big-bar" data-target="210" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="4.8">0</div><div class="big-bar" data-target="130" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="7.1">0</div><div class="big-bar" data-target="195" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Secondaire</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'abandon') {
+                title.innerHTML = "POINTS SAILLANTS : TAUX D'ABANDON SCOLAIRE (%)";
+                graphHTML = `
+                    ${bigGraphStyle}
+                    <div class="big-chart-container">
+                        <div class="big-legend">
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-commune)"></div> Com.</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-region)"></div> Rég.</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-national)"></div> Nat.</div>
+                        </div>
+                        <div class="big-chart-main">
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="1.16">0</div><div class="big-bar" data-target="60" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="1.1">0</div><div class="big-bar" data-target="58" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="1.98">0</div><div class="big-bar" data-target="105" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Primaire</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="4.12">0</div><div class="big-bar" data-target="210" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="4.0">0</div><div class="big-bar" data-target="205" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="7.55">0</div><div class="big-bar" data-target="360" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Collégial</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bars-flex">
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="3.73">0</div><div class="big-bar" data-target="195" style="background:var(--bar-commune)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="3.2">0</div><div class="big-bar" data-target="170" style="background:var(--bar-region)"></div></div>
+                                    <div class="big-bar-wrapper"><div class="big-bar-value" data-val="5.35">0</div><div class="big-bar" data-target="270" style="background:var(--bar-national)"></div></div>
+                                </div>
+                                <div class="big-cycle-label">Secondaire</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'redoublement-elouatia') {
+                title.innerHTML = "TAUX DE REDOUBLEMENT (%)";
+                graphHTML = `
+                    ${bigGraphStyle}
+                    <div class="big-chart-container">
+                        <div class="big-legend">
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-ouatia)"></div> Commune</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-region)"></div> Province</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-national)"></div> National</div>
+                        </div>
+                        <div class="big-chart-main" style="justify-content: center; gap: 80px;">
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="17.4">0</div>
+                                    <div class="big-bar" data-target="340" style="height:0; width:75px; background:var(--bar-ouatia)"></div>
+                                </div>
+                                <div class="big-cycle-label">Commune</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="12.7">0</div>
+                                    <div class="big-bar" data-target="250" style="height:0; width:75px; background:var(--bar-region)"></div>
+                                </div>
+                                <div class="big-cycle-label">Province</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="11.9">0</div>
+                                    <div class="big-bar" data-target="235" style="height:0; width:75px; background:var(--bar-national)"></div>
+                                </div>
+                                <div class="big-cycle-label">National</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'prescolaire-elouatia') {
+                title.innerHTML = "TAUX PRÉSCOLARITÉ (%)";
+                graphHTML = `
+                    ${bigGraphStyle}
+                    <div class="big-chart-container">
+                        <div class="big-legend">
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-ouatia)"></div> Commune</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-region)"></div> Province</div>
+                            <div class="legend-pill-big"><div class="legend-color-big" style="background:var(--bar-national)"></div> National</div>
+                        </div>
+                        <div class="big-chart-main" style="justify-content: center; gap: 80px;">
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="66">0</div>
+                                    <div class="big-bar" data-target="250" style="height:0; width:75px; background:var(--bar-ouatia)"></div>
+                                </div>
+                                <div class="big-cycle-label">Commune</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="78">0</div>
+                                    <div class="big-bar" data-target="300" style="height:0; width:75px; background:var(--bar-region)"></div>
+                                </div>
+                                <div class="big-cycle-label">Province</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="big-bar-wrapper" style="width:120px;">
+                                    <div class="big-bar-value" data-val="80">0</div>
+                                    <div class="big-bar" data-target="310" style="height:0; width:75px; background:var(--bar-national)"></div>
+                                </div>
+                                <div class="big-cycle-label">National</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'rural-abandon') {
+                title.innerHTML = "TAUX D’ABANDON SCOLAIRE (%)";
+                graphHTML = `
+                    <div style="background:#fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                        <!-- Reusing Sidebar Horizontal Bar Structure -->
+                        <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:40px; padding:10px; border:none; background:transparent;">
+                            
+                            <!-- Legend -->
+                            <div style="display:flex; justify-content:center; gap:30px; margin-bottom:10px; font-size:0.9rem; font-weight:700;">
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#94a3b8; border-radius:4px;"></div> National</div>
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#f97316; border-radius:4px;"></div> Région</div>
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#3b82f6; border-radius:4px;"></div> Province</div>
+                            </div>
+
+                            <!-- Collégial -->
+                            <div>
+                                <div style="font-weight:900; font-size:1.1rem; margin-bottom:15px; display:flex; align-items:center; gap:10px; color:#1e293b; text-transform:uppercase;">
+                                    <span style="width:5px; height:20px; background:#1e293b; border-radius:10px;"></span> Collégial
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- National 9.22 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="61%" style="background:#94a3b8; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:63%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">9.22</span>
+                                        </div>
+                                    </div>
+                                    <!-- Region 3.45 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="23%" style="background:#f97316; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:25%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">3.45</span>
+                                        </div>
+                                    </div>
+                                    <!-- Province 11.43 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="76%" style="background:#3b82f6; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:78%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">11.43</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Primaire -->
+                            <div>
+                                 <div style="font-weight:900; font-size:1.1rem; margin-bottom:15px; display:flex; align-items:center; gap:10px; color:#1e293b; text-transform:uppercase;">
+                                    <span style="width:5px; height:20px; background:#1e293b; border-radius:10px;"></span> Primaire
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- National 2.36 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="16%" style="background:#94a3b8; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:18%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">2.36</span>
+                                        </div>
+                                    </div>
+                                    <!-- Region 0.97 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="7%" style="background:#f97316; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:9%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">0.97</span>
+                                        </div>
+                                    </div>
+                                    <!-- Province 1.56 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="11%" style="background:#3b82f6; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:13%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">1.56</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'rural-redoublement') {
+                title.innerHTML = "TAUX DE REDOUBLEMENT (%)";
+                graphHTML = `
+                    <div style="background:#fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                        <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:40px; padding:10px; border:none; background:transparent;">
+                            
+                            <!-- Legend -->
+                           <div style="display:flex; justify-content:center; gap:30px; margin-bottom:10px; font-size:0.9rem; font-weight:700;">
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#94a3b8; border-radius:4px;"></div> National</div>
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#f97316; border-radius:4px;"></div> Région</div>
+                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px; height:14px; background:#3b82f6; border-radius:4px;"></div> Province</div>
+                            </div>
+
+                            <!-- Collégial -->
+                            <div>
+                                 <div style="font-weight:900; font-size:1.1rem; margin-bottom:15px; display:flex; align-items:center; gap:10px; color:#1e293b; text-transform:uppercase;">
+                                    <span style="width:5px; height:20px; background:#1e293b; border-radius:10px;"></span> Collégial
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- National 12.26 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="81%" style="background:#94a3b8; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:83%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">12.26</span>
+                                        </div>
+                                    </div>
+                                    <!-- Region 7.03 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="47%" style="background:#f97316; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:49%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">7.03</span>
+                                        </div>
+                                    </div>
+                                    <!-- Province 14.29 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="95%" style="background:#3b82f6; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:97%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">14.29</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Primaire -->
+                            <div>
+                                 <div style="font-weight:900; font-size:1.1rem; margin-bottom:15px; display:flex; align-items:center; gap:10px; color:#1e293b; text-transform:uppercase;">
+                                    <span style="width:5px; height:20px; background:#1e293b; border-radius:10px;"></span> Primaire
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- National 6.73 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(148, 163, 184, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="44%" style="background:#94a3b8; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:46%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">6.73</span>
+                                        </div>
+                                    </div>
+                                    <!-- Region 4.1 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(249, 115, 22, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="27%" style="background:#f97316; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:29%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">4.1</span>
+                                        </div>
+                                    </div>
+                                    <!-- Province 3.91 -->
+                                    <div style="display:flex; align-items:center; height:24px;">
+                                        <div style="width:100%; background:rgba(59, 130, 246, 0.1); border-radius:6px; height:100%; position:relative;">
+                                            <div class="progress-fill" data-width="26%" style="background:#3b82f6; position:absolute; left:0; width:0; height:100%; border-radius:6px;"></div>
+                                            <span style="position:absolute; left:28%; font-size:0.9rem; font-weight:800; color:#475569; line-height:24px;">3.91</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'rural-prescolaire') {
+                title.innerHTML = "TAUX DE PRÉSCOLARITÉ (%)";
+                graphHTML = `
+                    <div style="background:#fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                        <div class="rural-chart-container" style="display:flex; flex-direction:column; gap:25px; padding:0 10px 20px; border:none;">
+                            <div class="chart-main" style="display: flex; justify-content: space-around; align-items: flex-end; height: 350px; border-bottom: 3px solid #e2e8f0; padding-bottom: 35px; gap: 40px;">
+                                <!-- Ensemble 81% -->
+                                <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">81%</span>
+                                        <div class="bar" data-height="250px" style="width: 70px; border-radius: 12px 12px 0 0; background: #a41c1c; height: 0; transition: height 1.5s ease-out;"></div>
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #64748b; text-transform:uppercase;">Ensemble</div>
+                                </div>
+                                <!-- Urbain 82% -->
+                                <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">82%</span>
+                                        <div class="bar" data-height="255px" style="width: 70px; border-radius: 12px 12px 0 0; background: #a41c1c; height: 0; transition: height 1.5s ease-out;"></div>
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #64748b; text-transform:uppercase;">Urbain</div>
+                                </div>
+                                <!-- Rural 54% -->
+                                <div class="cycle-group" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">54%</span>
+                                        <div class="bar" data-height="165px" style="width: 70px; border-radius: 12px 12px 0 0; background: #a41c1c; height: 0; transition: height 1.5s ease-out;"></div>
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #64748b; text-transform:uppercase;">Rural</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'default-prescolaire') {
+                title.innerHTML = "TAUX DE PRÉSCOLARISATION (%)";
+                graphHTML = `
+                <div style="background:#fff; padding: 60px 30px 30px 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-top: 20px;">
+                    <div class="stacked-chart" style="justify-content: space-around; padding-top: 10px;">
+                        <!-- Provincial -->
+                        <div class="stacked-group">
+                            <div class="stacked-bar-container" style="height: 200px; width: 60px; background: #e2e8f0; border-radius: 10px; position:relative; overflow: hidden;">
+                                <div class="bar-segment" style="width: 100%; position: absolute; bottom: 0; left: 0; height: 81%; background: linear-gradient(to top, #1e3a8a, #3b82f6); transition: height 1s ease-out;">
+                                    <span class="segment-val" style="position: absolute; width: 100%; text-align: center; color: #000; font-weight: 800; bottom: 40%; font-size: 1.1rem; text-shadow: none;">81%</span>
+                                </div>
+                            </div>
+                            <div class="group-label" style="margin-top: 15px; font-weight: 700; color: #1e3a8a; font-size: 1rem;">Provincial</div>
+                        </div>
+
+                         <!-- Régional -->
+                        <div class="stacked-group">
+                            <div class="stacked-bar-container" style="height: 200px; width: 60px; background: #e2e8f0; border-radius: 10px; position:relative; overflow: hidden;">
+                                <div class="bar-segment" style="width: 100%; position: absolute; bottom: 0; left: 0; height: 75%; background: linear-gradient(to top, #c2410c, #ff5700); transition: height 1s ease-out;">
+                                    <span class="segment-val" style="position: absolute; width: 100%; text-align: center; color: #000; font-weight: 800; bottom: 40%; font-size: 1.1rem; text-shadow: none;">75%</span>
+                                </div>
+                            </div>
+                            <div class="group-label" style="margin-top: 15px; font-weight: 700; color: #c2410c; font-size: 1rem;">Régional</div>
+                        </div>
+
+                         <!-- National -->
+                        <div class="stacked-group">
+                             <div class="stacked-bar-container" style="height: 200px; width: 60px; background: #e2e8f0; border-radius: 10px; position:relative; overflow: hidden;">
+                                <div class="bar-segment" style="width: 100%; position: absolute; bottom: 0; left: 0; height: 84%; background: linear-gradient(to top, #475569, #94a3b8); transition: height 1s ease-out;">
+                                    <span class="segment-val" style="position: absolute; width: 100%; text-align: center; color: #000; font-weight: 800; bottom: 40%; font-size: 1.1rem; text-shadow: none;">84%</span>
+                                </div>
+                            </div>
+                            <div class="group-label" style="margin-top: 15px; font-weight: 700; color: #475569; font-size: 1rem;">National</div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            } else if (type === 'default-abandon') {
+                title.innerHTML = "TAUX D'ABANDON SCOLAIRE (%)";
+                graphHTML = `
+                <div style="background:#fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                     <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; font-weight: 700; margin-bottom: 25px;">
+                            <span><i class="fa-solid fa-square" style="color: #94a3b5;"></i> National</span>
+                            <span><i class="fa-solid fa-square" style="color: #f97316;"></i> Région</span>
+                            <span><i class="fa-solid fa-square" style="color: #0ea5e9;"></i> Province</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:25px;">
+                        <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Primaire</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 25%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">1.98</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 15%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">1.1</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 15%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">1.1</span></div>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Collégial</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 75%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">7.55</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 40%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">4</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 41%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">4.1</span></div>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Secondaire</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 53%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">5.35</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 32%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">3.2</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 37%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">3.7</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            } else if (type === 'default-redoublement') {
+                title.innerHTML = "TAUX DE REDOUBLEMENT (%)";
+                graphHTML = `
+                <div style="background:#fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                     <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; font-weight: 700; margin-bottom: 25px;">
+                            <span><i class="fa-solid fa-square" style="color: #94a3b5;"></i> National</span>
+                            <span><i class="fa-solid fa-square" style="color: #f97316;"></i> Région</span>
+                            <span><i class="fa-solid fa-square" style="color: #0ea5e9;"></i> Province</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:25px;">
+                        <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Primaire</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 58%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">5.8</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 41%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">4.1</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 53%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">5.3</span></div>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Collégial</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 90%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">12</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 70%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">9.4</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 95%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">12.7</span></div>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Secondaire</div>
+                            <div class="h-bar-container" style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar national" style="width: 71%; height:100%; background:#94a3b5; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">7.1</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar region" style="width: 49%; height:100%; background:#f97316; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">4.9</span></div>
+                                <div class="h-bar-line" style="display:flex; align-items:center; gap:10px;"><div class="h-bar-wrapper-flex" style="flex:1; background:#f1f5f9; height:20px; border-radius:5px;"><div class="h-bar province" style="width: 71%; height:100%; background:#0ea5e9; border-radius:5px;"></div></div><span class="h-bar-val" style="font-weight:700; width:40px;">7.1</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            } else if (type === 'default-classes33') {
+                title.innerHTML = "% DES CLASSES DE 33 ÉLÈVES ET PLUS";
+                graphHTML = `
+                <div style="background:#fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                     <div class="chart-box-edu" style="border:none; box-shadow:none;">
+                     <div style="display:flex; flex-direction:column; gap:25px;">
+                        <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Primaire</div>
+                            <div class="h-bar-line" style="display:flex; align-items:center; gap:15px;">
+                                <div class="h-bar-wrapper-flex" style="background:#fef3c7; height:25px; flex:1; border-radius:6px;">
+                                    <div class="h-bar" style="width: 0%; background:linear-gradient(to right, #b45309, #d97706); height:100%; border-radius:6px;"></div>
+                                </div>
+                                <span class="h-bar-val" style="color:#b45309; font-weight:800; font-size:1.1rem; width:50px;">0%</span>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Collégial</div>
+                             <div class="h-bar-line" style="display:flex; align-items:center; gap:15px;">
+                                <div class="h-bar-wrapper-flex" style="background:#fef3c7; height:25px; flex:1; border-radius:6px;">
+                                    <div class="h-bar" style="width: 68%; background:linear-gradient(to right, #b45309, #d97706); height:100%; border-radius:6px;"></div>
+                                </div>
+                                <span class="h-bar-val" style="color:#b45309; font-weight:800; font-size:1.1rem; width:50px;">68%</span>
+                            </div>
+                        </div>
+                         <div class="h-bar-row">
+                            <div class="h-bar-label" style="font-size:1rem; font-weight:800; margin-bottom:10px;">Secondaire</div>
+                            <div class="h-bar-line" style="display:flex; align-items:center; gap:15px;">
+                                <div class="h-bar-wrapper-flex" style="background:#fef3c7; height:25px; flex:1; border-radius:6px;">
+                                    <div class="h-bar" style="width: 1%; background:linear-gradient(to right, #b45309, #d97706); height:100%; border-radius:6px;"></div>
+                                </div>
+                                <span class="h-bar-val" style="color:#b45309; font-weight:800; font-size:1.1rem; width:50px;">0.6%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                `;
+            }
+
+            // Ensure animation is triggered for standard sidebar classes as well
+            setTimeout(() => {
+                animateProgress(); // Triggers .progress-fill and .bar animations (sidebar style)
+                animateAllChartValues(); // Triggers .h-bar, .bar-segment animations (dashboard style)
+            }, 200);
+
+
+            body.innerHTML = graphHTML;
+            modal.style.display = 'flex';
+
+            // Premium Staggered Animation
+            setTimeout(() => {
+                const bars = document.querySelectorAll('.big-bar');
+                const values = document.querySelectorAll('.big-bar-value');
+
+                bars.forEach((bar, index) => {
+                    setTimeout(() => {
+                        bar.style.height = bar.getAttribute('data-target') + "px";
+                    }, index * 80);
+                });
+
+                values.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = "1";
+                        const target = parseFloat(el.getAttribute('data-val'));
+                        const isDecimal = target % 1 !== 0;
+                        animateCounter(el, target, 1800, true, isDecimal ? (target.toString().split('.')[1]?.length || 1) : 0);
+                    }, index * 80 + 400);
+                });
+            }, 150);
+        }
+
+        function showElOuatiaDetails() {
+            document.getElementById('btn-elouatia').classList.add('active');
+            document.getElementById('btn-tantan').classList.remove('active');
+
+            highlightSVGCommune('El Ouatia');
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="ui-card" onclick="showElOuatiaRight()">
+                    <div class="card-urbain-header">Ville El Ouatia</div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-ship"></i></div><div class="indicator-label">El Ouatia (Portuaire)</div></div>
+                    <div class="indicator-row"><div class="indicator-icon"><i class="fa-solid fa-map-location-dot"></i></div><div class="indicator-label">Superficie : 22 km²</div></div>
+                    <div class="indicator-row">
+                    <div class="urbain-icon-box"><i class="fa-solid fa-users"></i></div>
+                    <div class="indicator-label">14 258 Habitants</div></div>
+                   
+                </div>
+
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 400px; margin: 20px auto; border: 2px solid #1e3a8a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background-color: #ffffff;">
+                <div style="padding: 20px; color: #334155;">
+
+                    
+
+
+
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-school" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">04 Ecoles primaires</span>
+
+                    </div>
+                    <div style="display: flex; align-items: center; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-university" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">02 Lycées collégiaux</span>
+
+                    </div>
+
+
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-building" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">01 Lycée qualifiant</span>
+
+                    </div>
+                     <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 10px; background-color: #f0f7ff; border-radius: 8px;">
+
+                        <i class="fas fa-child" style="color: #1e3a8a; width: 25px;"></i>
+
+                        <span style="font-size: 1rem; font-weight: 500;">01 Lycée technique</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+            `;
+            showElOuatiaRight();
+        }
+
+        function showElOuatiaRight() {
+            document.getElementById('panel-right').innerHTML = `
+                <div class="ui-card alert-card-modern" onclick="showGraphPopup('redoublement-elouatia')" style="cursor: pointer;">
+                    <div class="alert-header-modern">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--alert-red); font-size:24px;"></i>
+                        <span class="alert-commune-name">Points saillants</span>
+                    </div>
+                    <div class="red-banner">Taux de redoublement très élevé au collégial (%)</div>
+                    <div class="chart-container-tantan">
+                        <div class="chart-main" style="height:150px;">
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-ouatia)">17.4%</span>
+                                    <div class="bar" data-height="110px" style="width:30px; background:var(--bar-ouatia)"></div>
+                                </div>
+                                <div class="cycle-label">Commune</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-region)">12.7%</span>
+                                    <div class="bar" data-height="80px" style="width:30px; background:var(--bar-region)"></div>
+                                </div>
+                                <div class="cycle-label">Province</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-national)">11.9%</span>
+                                    <div class="bar" data-height="75px" style="width:30px; background:var(--bar-national)"></div>
+                                </div>
+                                <div class="cycle-label">National</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                 <div class="ui-card alert-card-modern" onclick="showGraphPopup('prescolaire-elouatia')" style="cursor: pointer;">
+                  
+                    <div class="red-banner">Taux Préscolarité (%)</div>
+                    <div class="chart-container-tantan">
+                        <div class="chart-main" style="height:150px;">
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-ouatia)">66%</span>
+                                    <div class="bar" data-height="70px" style="width:30px; background:var(--bar-ouatia)"></div>
+                                </div>
+                                <div class="cycle-label">Commune</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-region)">78%</span>
+                                    <div class="bar" data-height="80px" style="width:30px; background:var(--bar-region)"></div>
+                                </div>
+                                <div class="cycle-label">Province</div>
+                            </div>
+                            <div class="cycle-group">
+                                <div class="bar-wrapper">
+                                    <span class="bar-value" style="color:var(--bar-national)">80%</span>
+                                    <div class="bar" data-height="90px" style="width:30px; background:var(--bar-national)"></div>
+                                </div>
+                                <div class="cycle-label">National</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            
+            `;
+            animateProgress();
+        }
+
+
+
+        const diagnosticData = [
+            {
+                icon: "fa-child-reaching",
+                prob: "Manque de généralisation du préscolaire (1 enfant sur 5 ne bénéficie pas du préscolaire)",
+                target: "Atteindre 100% dans le préscolaire"
+            },
+            {
+                icon: "fa-rotate-left",
+                prob: "Taux de redoublement élevé <br> Primaire (5,34%) ; collégial (12,7%) ; secondaire ( 7,05%)",
+                target: "Réduire de 50% le taux de redoublement <br> Primaire (2,6%) ; collégial (6,3%) ; secondaire( 3,5%)"
+            },
+            {
+                icon: "fa-person-walking-dashed-line-arrow-right",
+                prob: "Taux d’abandon scolaire au collégial est très élevé dans le milieu rural (11,4%)",
+                target: "Réduire de 70% le taux d’abandon scolaire au collégial dans le milieu rural ( 3,4%)"
+            },
+            {
+                icon: "fa-trowel-bricks",
+                prob: "Dégradation des infrastructures éducatives ( Classes , espaces sportifs , bibliothèques )",
+                target: "Réhabilitation des infrastructures des établissements scolaires"
+            },
+            {
+                icon: "fa-users-rectangle",
+                prob: "Surcharge des classes",
+                target: "Atteindre un effectif de 33 élèves par classe"
+            },
+            {
+                icon: "fa-building-columns",
+                prob: "Faible offre d’enseignement universitaire",
+                target: "Création de la faculté poly disciplinaire, de l'EST et de l’ENCG"
+            },
+            {
+                icon: "fa-laptop-code",
+                prob: "Faible utilisation des NTIC",
+                target: "Renforcement de l’utilisation des NTIC"
+            },
+            {
+                icon: "fa-briefcase",
+                prob: "Inadéquation de l’offre de formation professionnelle au marché de l’emploi",
+                target: "Adaptation des filières de la formation professionnelle aux besoins du marché de l’emploi"
+            }
+        ];
+
+        function showCiblage() {
+            closeView();
+            const body = document.getElementById('popup-body');
+            const modal = document.getElementById('modal-content');
+            const modalHeader = document.querySelector('.modal-header'); // Get header to style it
+            const title = document.getElementById('popup-title');
+
+            title.innerText = "DIAGNOSTIC & CIBLAGE ÉDUCATION";
+            title.style.textTransform = "uppercase";
+            title.style.letterSpacing = "1px";
+
+            modalHeader.style.background = "var(--primary)";
+            modalHeader.style.color = "white";
+            modalHeader.style.padding = "15px 25px";
+            modalHeader.style.position = "relative";
+
+            modal.style.maxWidth = "1000px";
+            modal.style.borderRadius = "20px";
+            modal.style.overflow = "hidden";
+
+            let html = `
+                <style>
+                    .diag-row-container {
+                        opacity: 0;
+                        transform: translateY(20px);
+                        transition: all 0.5s ease-out;
+                        display: grid; 
+                    }
+                    .diag-row-container.active {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    .diag-cell {
+                        background: #f0f9ff;
+                        border-radius: 50px;
+                        padding: 8px 15px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        min-height: 50px;
+                        transition: transform 0.2s;
+                        border-left: 6px solid var(--primary);
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    }
+                    .diag-target-new { background: #f0fdf4; border-left-color: #15803d; }
+                    .diag-cell:hover { transform: scale(1.02); }
+                    .icon-circle {
+                        width: 32px; height: 32px; border-radius: 50%; background: white;
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 0.9rem; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    .diag-text-new { font-size: 0.9rem; font-weight: 700; line-height: 1.3; }
+                    .ciblage-title-compact {
+                        padding: 12px; border-radius: 50px; text-align: center; color: white;
+                        font-weight: 800; font-size: 0.85rem; text-transform: uppercase;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    }
+                    .btn-next-arrow {
+                        position: absolute; bottom: 30px; right: 35px; width: 65px; height: 65px;
+                        background: var(--primary); color: white; border: 4px solid white; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; font-size: 1.6rem; cursor: pointer;
+                        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.4); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;
+                        animation: pulseEntrance 0.6s 0.5s backwards;
+                    }
+                    .btn-next-arrow:hover { transform: scale(1.15) rotate(-10deg); background: #1e40af; }
+                    @keyframes pulseEntrance { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                </style>
+
+                <div style="padding: 25px;">
+                    <div class="ciblage-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px; gap: 20px;">
+                        <div class="ciblage-title-compact" style="background: #a41c1c;">État des Lieux / Déficits</div>
+                        <div class="ciblage-title-compact" style="background: #15803d;">Objectifs Stratégiques</div>
+                    </div>
+
+                    <div id="diag-rows-wrapper" style="display:flex; flex-direction:column; gap:12px;">
+            `;
+
+            diagnosticData.forEach((item, index) => {
+                html += `
+                    <div class="diag-row-container" id="diag-row-${index}" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="diag-cell">
+                            <div class="icon-circle" style="color:#a41c1c;"><i class="fa-solid ${item.icon}"></i></div>
+                            <div class="diag-text-new" style="color:#7c1d1d;">${item.prob}</div>
+                        </div>
+                        <div class="diag-cell diag-target-new">
+                            <div class="icon-circle" style="color:#15803d;"><i class="fa-solid ${item.icon}"></i></div>
+                            <div class="diag-text-new" style="color:#14532d;">${item.target}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+                <button onclick="showProgramme2026()" class="btn-next-arrow" title="Voir le Programme Éducation 2026">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            `;
+
+            body.innerHTML = html;
+            document.getElementById('alertPopup').style.display = 'flex';
+
+            // Staggered Animation
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.diag-row-container');
+                rows.forEach((row, index) => {
+                    setTimeout(() => {
+                        row.classList.add('active');
+                    }, index * 100); // Faster stagger
+                });
+            }, 50);
+
+            modal.onclick = null;
+        }
+
+        function showProgramme2026() {
+            closePopupCiblage();
+            const modal = document.getElementById('programmePopup');
+            const body = document.getElementById('prog-popup-body');
+            const header = modal.querySelector('.modal-header');
+
+            header.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="background:rgba(255,255,255,0.2); padding:8px; border-radius:10px;">
+                        <i class="fa-solid fa-graduation-cap" style="font-size:1.4rem;"></i>
+                    </div>
+                    <span style="font-size:1.2rem; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Axe Éducation & Formation</span>
+                </div>
+                <span onclick="closeProgrammePopup()" style="font-size:2rem; cursor:pointer; opacity:0.8;">&times;</span>
+            `;
+
+            header.style.background = "linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%)";
+            header.style.padding = "18px 30px";
+
+            const contentBox = document.getElementById('prog-modal-content');
+            contentBox.style.maxWidth = "1150px";
+            contentBox.style.borderRadius = "25px";
+
+            let html = `
+                <style>
+                    .prog-inner { padding: 30px; background: #fffcf9; }
+                    .prog-banner { 
+                        background: white; border-left: 8px solid #1e3a8a; padding: 18px 25px; border-radius: 12px;
+                        font-size: 1.25rem; font-weight: 800; color: #1e3a8a; margin-bottom: 25px;
+                        box-shadow: 0 8px 25px rgba(30,58,138,0.06); display: flex; align-items: center; gap: 15px; text-transform: uppercase;
+                    }
+                    .table-2026 { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+                    .table-2026 thead th { color: #1e3a8a; padding: 0 15px 8px; text-align: left; font-size: 0.85rem; font-weight: 900; text-transform: uppercase; opacity:0.8; }
+                    .table-2026 tbody tr { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.03); opacity:0; transform:translateY(20px); animation: rowSlideIn 0.5s ease forwards; }
+                    .table-2026 td { padding: 15px 18px; vertical-align: middle; color: #334155; font-weight: 600; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+                    .table-2026 td:first-child { border-left: 5px solid #0ea5e9; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+                    .table-2026 td:last-child { border-right: 1px solid #f1f5f9; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+                    @keyframes rowSlideIn { to { opacity: 1; transform: translateY(0); } }
+                    .pill-loc { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1e40af; padding: 5px 12px; border-radius: 50px; font-size: 0.8rem; border: 1px solid #dbeafe; white-space: nowrap; margin-bottom: 3px; }
+                    .frame-cost { display: inline-flex; justify-content: center; align-items: center; width: 50px; height: 42px; background: #fff; color: #1e3a8a; border-radius: 10px; font-weight: 950; font-size: 1.15rem; border: 2.5px solid #dbeafe; box-shadow: 0 4px 10px rgba(30,58,138,0.08); }
+                    .list-obj { margin:0; padding-left:18px; list-style:none; }
+                    .list-obj li { margin-bottom:3px; position:relative; font-size: 0.85rem; }
+                    .list-obj li::before { content: "•"; color: #0ea5e9; font-weight:bold; position:absolute; left:-12px; }
+                    .total-bar { background: #1e3a8a !important; color: white !important; font-weight: 900; }
+                    .total-bar td { color: white !important; border:none !important; padding: 18px !important; }
+                    .total-val { display: inline-flex; border: 2px solid rgba(255,255,255,0.4); padding: 6px 18px; border-radius: 12px; background: rgba(255,255,255,0.1); font-size: 1.4rem; }
+                </style>
+
+                <div class="prog-inner">
+                    <div class="prog-banner">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        Programme prioritaire au titre de l’année 2026
+                    </div>
+
+                    <table class="table-2026">
+                        <thead>
+                            <tr>
+                                <th width="32%">Projets Stratégiques</th>
+                                <th width="20%">Ciblage Territorial</th>
+                                <th width="15%" style="text-align:center;">Coût (Mdhs)</th>
+                                <th width="33%">Objectifs & Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                     <tbody>
+    <tr style="animation-delay: 0.1s">
+        <td style="color: black; font-weight:700;">Construction du lycée collégial « Al Mostakbal »</td>
+        <td align="center" style="color: black;">
+            <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Tan-Tan</span>
+        </td>
+        <td align="center"><div class="frame-cost" style="color: black;">09</div></td>
+        <td>
+            <ul class="list-obj">
+                <li style="color: red;">Réduction de l'encombrement du collégial</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr style="animation-delay: 0.2s">
+        <td style="color: black; font-weight:700;">Construction d'un lycée collégial</td>
+        <td align="center" style="color: black;">
+            <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Msied</span>
+        </td>
+        <td align="center"><div class="frame-cost" style="color: black;">09</div></td>
+        <td>
+            <ul class="list-obj">
+                <li style="color: red;">-Lutte contre l'exode rural</li>
+                <li style="color: red;">-Renforcement de l'offre d'enseignement</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr style="animation-delay: 0.3s">
+        <td style="color: black; font-weight:700;">Réhabilitation des établissements scolaires</td>
+        <td align="center" style="color: black;">
+            <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Intercommunal</span>
+        </td>
+        <td align="center"><div class="frame-cost" style="color: black;">03</div></td>
+        <td>
+            <ul class="list-obj">
+                <li style="color: black;">Amélioration de l'environnement d'apprentissage</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr style="animation-delay: 0.4s">
+        <td style="color: black; font-weight:700;">Soutien pédagogique</td>
+        <td align="center" style="color: black;">
+            <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Intercommunal</span>
+        </td>
+        <td align="center"><div class="frame-cost" style="color: black;">02</div></td>
+        <td>
+            <ul class="list-obj">
+                <li style="color: black;">Aider les élèves à surmonter leurs difficultés d'apprentissage, à améliorer leurs résultats scolaires</li>
+                <li style="color: black;">Réduire le taux de redoublement</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr style="animation-delay: 0.5s">
+        <td style="color: black; font-weight:700;">Transport scolaire</td>
+        <td align="center" style="color: black;">
+            <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Intercommunal</span>
+        </td>
+        <td align="center"><div class="frame-cost" style="color: black;">04</div></td>
+        <td>
+            <ul class="list-obj">
+                <li style="color: black;">Faciliter l'accès à l'éducation</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr style="animation-delay: 0.6s; background: #4c7c3c;" class="total-bar">
+        <td colspan="2" style="text-align:left; padding-left:25px; font-size:1.3rem; color:white; font-weight:bold;">Total</td>
+        <td align="center">
+            <div class="total-val" style="background:white; color: black; padding:5px; border-radius:5px; font-weight:900;">27</div>
+        </td>
+        <td align="center" style="color: white;"></td>
+    </tr>
+</tbody>
+
+                    <div style="margin-top:30px;">
+                        <button onclick="backToDiag()" style="background:white; border:none; padding:12px 25px; border-radius:50px; color:#64748b; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow:0 5px 15px rgba(0,0,0,0.05); transition:0.3s;" onmouseover="this.style.color='#1e3a8a'; this.style.transform='translateX(-5px)'" onmouseout="this.style.color='#64748b'; this.style.transform='none'">
+                            <i class="fa-solid fa-arrow-left"></i> Retour au Diagnostic
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            body.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function closeProgrammePopup() {
+            document.getElementById('programmePopup').style.display = 'none';
+        }
+
+        function backToDiag() {
+            closeProgrammePopup();
+            showCiblage();
+        }
+
+        function closePopupCiblage() {
+            document.getElementById('alertPopup').style.display = 'none';
+        }
+
+        function highlightSVGCommune(name) {
+            // Remove previous highlights
+            document.querySelectorAll('.isolated-path').forEach(p => p.classList.remove('pop-active'));
+            // Add to selected
+            const target = document.getElementById(`path-${name.replace(/\s+/g, '-')}`);
+            if (target) target.classList.add('pop-active');
+        }
+
+        function isolateGroup(zone) {
+            zone === 'rural' ? showRuralLeft() : showUrbainLeft();
+            document.getElementById('map-overlay').classList.add('active');
+            document.getElementById('map-detail').style.filter = "blur(15px) grayscale(0.2) brightness(0.9)";
+            const svg = document.getElementById('isolated-svg');
+            svg.innerHTML = "";
+            let combinedBounds = null;
+
+            // First pass: Calculate bounds for all layers to ensure consistent view
+            Object.keys(layersMap).forEach(name => {
+                const bbox = layersMap[name]._path.getBBox();
+                if (!combinedBounds) { combinedBounds = { x: bbox.x, y: bbox.y, r: bbox.x + bbox.width, b: bbox.y + bbox.height }; }
+                else {
+                    combinedBounds.x = Math.min(combinedBounds.x, bbox.x);
+                    combinedBounds.y = Math.min(combinedBounds.y, bbox.y);
+                    combinedBounds.r = Math.max(combinedBounds.r, bbox.x + bbox.width);
+                    combinedBounds.b = Math.max(combinedBounds.b, bbox.y + bbox.height);
+                }
+            });
+
+            // Second pass: Draw non-target communes as white "context" shapes (completes the lines)
+            Object.keys(layersMap).forEach(name => {
+                const layer = layersMap[name];
+                const isTarget = (zone === 'rural' ? ruralNames.includes(name) : urbainNames.includes(name));
+
+                if (!isTarget) {
+                    const pathContext = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    pathContext.setAttribute("d", layer._path.getAttribute('d'));
+                    pathContext.setAttribute("fill", "#ffffff");
+                    pathContext.setAttribute("stroke", "#475569");
+                    pathContext.setAttribute("stroke-width", "0.5");
+                    pathContext.style.opacity = "0.9";
+                    svg.appendChild(pathContext);
+                }
+            });
+
+            // Third pass: Draw target communes with color and labels
+            Object.keys(layersMap).forEach(name => {
+                const layer = layersMap[name];
+                const isTarget = (zone === 'rural' ? ruralNames.includes(name) : urbainNames.includes(name));
+
+                if (isTarget) {
+                    const bbox = layer._path.getBBox();
+                    const centerX = bbox.x + bbox.width / 2;
+                    const centerY = bbox.y + bbox.height / 2;
+
+                    // 1. Draw the "Trace" (Static placeholder left behind)
+                    const pathTrace = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    pathTrace.setAttribute("d", layer._path.getAttribute('d'));
+                    pathTrace.setAttribute("fill", "#e2e8f0"); // Faint grey trace
+                    pathTrace.setAttribute("stroke", "#94a3b8");
+                    pathTrace.setAttribute("stroke-width", "0.5");
+                    pathTrace.style.opacity = "0.5";
+                    svg.appendChild(pathTrace);
+
+                    // 2. Draw the "Top Layer" (The one that will pop out)
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", layer._path.getAttribute('d'));
+                    path.setAttribute("fill", zone === 'rural' ? "var(--color-rural)" : "var(--color-urbain)");
+                    path.setAttribute("stroke", "#0f172a");
+                    path.setAttribute("stroke-width", "1");
+                    path.setAttribute("id", `path-${name.replace(/\s+/g, '-')}`);
+                    path.setAttribute("class", "isolated-path");
+                    path.style.transformOrigin = `${centerX}px ${centerY}px`;
+                    path.style.filter = "drop-shadow(0 5px 10px rgba(0,0,0,0.2))";
+                    path.style.transition = "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)";
+                    svg.appendChild(path);
+
+                    // 3. Text Label in Black with White Halo (Attached to the popping path if we want, or shared)
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", centerX);
+                    text.setAttribute("y", centerY + 5);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("fill", "#000000");
+                    text.setAttribute("stroke", "#ffffff");
+                    text.setAttribute("stroke-width", "3");
+                    text.setAttribute("paint-order", "stroke");
+                    text.setAttribute("font-size", "11");
+                    text.setAttribute("font-weight", "900");
+                    text.style.pointerEvents = "none";
+                    text.textContent = name;
+                    svg.appendChild(text);
+                }
+            });
+            if (combinedBounds) svg.setAttribute('viewBox', `${combinedBounds.x - 20} ${combinedBounds.y - 20} ${combinedBounds.r - combinedBounds.x + 40} ${combinedBounds.b - combinedBounds.y + 40}`);
+            document.getElementById('isolated-box').classList.add('active');
+
+            // Automatic Pop-Out effect for the isolated group
+            setTimeout(() => {
+                document.querySelectorAll('.isolated-path').forEach(p => {
+                    p.classList.add('pop-active');
+                });
+            }, 100);
+        }
+
+        function initDefaultDash() {
+            // Left Panel Content (Image 1 side)
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="chart-box-edu" onclick="showGraphPopup('default-prescolaire')" style="cursor: pointer;">
+                    <div class="chart-box-title">Taux de préscolarisation (%)</div>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background:linear-gradient(to top, #1e3a8a, #3b82f6);"></span>
+                                Provincial
+                            </div>
+
+                            <div class="legend-item">
+                                <span class="legend-color" style="background:linear-gradient(to top, #c2410c, #ff5700);"></span>
+                                Régional
+                            </div>
+
+                            <div class="legend-item">
+                                <span class="legend-color" style="background:linear-gradient(to top, #475569, #94a3b8);"></span>
+                                National
+                            </div>
+                        </div>
+                    <div class="stacked-chart">
+                        <div class="stacked-group">
+                            <div class="stacked-bar-container">
+                                <div class="bar-segment" style="height: 81%; background: linear-gradient(to top, #1e3a8a, #3b82f6);">
+                                    <span class="segment-val" style="bottom: 40%;">81%</span>
+                                </div>
+                            </div>
+                            <div class="group-label">Provincial</div>
+                        </div>
+
+                        <div class="stacked-group">
+                            <div class="stacked-bar-container">
+                                <div class="bar-segment" style="height: 75%; background: linear-gradient(to top, #c2410c, #ff5700);">
+                                    <span class="segment-val" style="bottom: 40%;">75%</span>
+                                </div>
+                            </div>
+                            <div class="group-label">Régional</div>
+                        </div>
+
+                        <div class="stacked-group">
+                            <div class="stacked-bar-container">
+                                <div class="bar-segment" style="height: 84%; background: linear-gradient(to top, #475569, #94a3b8);">
+                                    <span class="segment-val" style="bottom: 40%;">84%</span>
+                                </div>
+                            </div>
+                            <div class="group-label">National</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-box-edu" onclick="showGraphPopup('default-abandon')" style="cursor: pointer;">
+                    <div class="chart-box-title">Taux d'abandon scolaire (%)</div>
+                    <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.7rem; font-weight: 700; margin-bottom: 25px;">
+                            <span><i class="fa-solid fa-square" style="color: #94a3b5;"></i> National</span>
+                            <span><i class="fa-solid fa-square" style="color: #f97316;"></i> Région</span>
+                            <span><i class="fa-solid fa-square" style="color: #0ea5e9;"></i> Province</span>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Primaire</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 25%"></div></div><span class="h-bar-val">1.98</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 15%"></div></div><span class="h-bar-val">1.1</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 15%"></div></div><span class="h-bar-val">1.1</span></div>
+                        </div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Collégial</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 75%"></div></div><span class="h-bar-val">7.55</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 40%"></div></div><span class="h-bar-val">4</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 41%"></div></div><span class="h-bar-val">4.1</span></div>
+                        </div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Secondaire</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 53%"></div></div><span class="h-bar-val">5.35</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 32%"></div></div><span class="h-bar-val">3.2</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 37%"></div></div><span class="h-bar-val">3.7</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="edu-footer-info">
+                    <i class="fa-solid fa-building-columns edu-footer-icon"></i>
+                    <div class="edu-footer-text">00 établissement supérieur</div>
+                </div>
+                
+                 <div class="edu-footer-info">
+                    <i class="fa-solid fa-graduation-cap edu-footer-icon"></i>
+                    <div class="edu-footer-text">Faible offre de formation (OFPPT)</div>
+                </div>
+                
+            `;
+
+            // Right Panel Content (Image 2 side)
+            document.getElementById('panel-right').innerHTML = `
+                
+                <div class="chart-box-edu" onclick="showGraphPopup('default-redoublement')" style="cursor: pointer;">
+                    <div class="chart-box-title">Taux de redoublement (%)</div>
+                     <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.7rem; font-weight: 700; margin-bottom: 25px;">
+                <span><i class="fa-solid fa-square" style="color: #94a3b5;"></i> National</span>
+                <span><i class="fa-solid fa-square" style="color: #f97316;"></i> Région</span>
+                <span><i class="fa-solid fa-square" style="color: #0ea5e9;"></i> Province</span>
+            </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Primaire</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 58%"></div></div><span class="h-bar-val">5.8</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 41%"></div></div><span class="h-bar-val">4.1</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 53%"></div></div><span class="h-bar-val">5.3</span></div>
+                        </div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Collégial</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 90%"></div></div><span class="h-bar-val">12</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 70%"></div></div><span class="h-bar-val">9.4</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 95%"></div></div><span class="h-bar-val">12.7</span></div>
+                        </div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Secondaire</div>
+                        <div class="h-bar-container">
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar national" style="width: 71%"></div></div><span class="h-bar-val">7.1</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar region" style="width: 49%"></div></div><span class="h-bar-val">4.9</span></div>
+                            <div class="h-bar-line"><div class="h-bar-wrapper-flex"><div class="h-bar province" style="width: 71%"></div></div><span class="h-bar-val">7.1</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-box-edu" style="border-left: 8px solid #854d0e; cursor: pointer;" onclick="showGraphPopup('default-classes33')">
+                    <div class="chart-box-title" style="color:#854d0e; border-bottom-color:#fef3c7;">% des classes de 33 élèves et plus </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Primaire</div>
+                        <div class="h-bar-line"><div class="h-bar-wrapper-flex" style="background:#fef3c7;"><div class="h-bar" style="width: 0%; background:linear-gradient(to right, #b45309, #d97706)"></div></div><span class="h-bar-val" style="color:#b45309">0%</span></div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Collégial</div>
+                        <div class="h-bar-line"><div class="h-bar-wrapper-flex" style="background:#fef3c7;"><div class="h-bar" style="width: 68%; background:linear-gradient(to right, #b45309, #d97706)"></div></div><span class="h-bar-val" style="color:#b45309">68%</span></div>
+                    </div>
+                    <div class="h-bar-row">
+                        <div class="h-bar-label">Secondaire</div>
+                        <div class="h-bar-line"><div class="h-bar-wrapper-flex" style="background:#fef3c7;"><div class="h-bar" style="width: 1%; background:linear-gradient(to right, #b45309, #d97706)"></div></div><span class="h-bar-val" style="color:#b45309">0.6%</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== ANIMATION SYSTEM FOR DYNAMIC NUMBERS =====
+        function animateCounter(element, targetValue, duration = 1500, isPercentage = false, decimals = 0) {
+            const startValue = 0;
+            const startTime = performance.now();
+
+            // Easing function for smooth animation
+            const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
+
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutQuart(progress);
+
+                const currentValue = startValue + (targetValue - startValue) * easedProgress;
+
+                if (decimals > 0) {
+                    element.textContent = currentValue.toFixed(decimals) + (isPercentage ? '%' : '');
+                } else {
+                    element.textContent = Math.floor(currentValue) + (isPercentage ? '%' : '');
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                }
+            }
+
+            requestAnimationFrame(updateCounter);
+        }
+
+        function animateAllChartValues() {
+            // Animate stacked bar segment values (left panel)
+            document.querySelectorAll('.segment-val').forEach(el => {
+                const text = el.textContent.trim();
+                const numMatch = text.match(/[\d.]+/);
+                if (numMatch) {
+                    const value = parseFloat(numMatch[0]);
+                    const hasPercent = text.includes('%');
+                    animateCounter(el, value, 1800, hasPercent, 0);
+                }
+            });
+
+            // Animate horizontal bar values (right panel)
+            document.querySelectorAll('.h-bar-val').forEach(el => {
+                const text = el.textContent.trim();
+                const numMatch = text.match(/[\d.]+/);
+                if (numMatch) {
+                    const value = parseFloat(numMatch[0]);
+                    const hasPercent = text.includes('%');
+                    const decimals = value % 1 !== 0 ? 1 : 0;
+                    animateCounter(el, value, 1600, hasPercent, decimals);
+                }
+            });
+
+            // Animate stat values (Préscolarisation & Scolarisation)
+            document.querySelectorAll('.edu-stat-value').forEach(el => {
+                const text = el.textContent.trim();
+                const numMatch = text.match(/[\d.]+/);
+                if (numMatch) {
+                    const value = parseFloat(numMatch[0]);
+                    const hasPercent = text.includes('%');
+                    const decimals = value % 1 !== 0 ? 1 : 0;
+                    animateCounter(el, value, 1400, hasPercent, decimals);
+                }
+            });
+
+            // Animate horizontal bars width with stagger effect
+            document.querySelectorAll('.h-bar').forEach((bar, index) => {
+                const targetWidth = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = targetWidth;
+                }, index * 50);
+            });
+
+            // Animate stacked bar heights
+            document.querySelectorAll('.bar-segment').forEach((segment, index) => {
+                const targetHeight = segment.style.height;
+                segment.style.height = '0%';
+                setTimeout(() => {
+                    segment.style.height = targetHeight;
+                }, index * 100);
+            });
+        }
+
+        // Initialize dash on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initDefaultDash();
+            // Start animations after a brief delay to ensure DOM is ready
+            setTimeout(animateAllChartValues, 200);
+        });
+
+
+
+
+        function closeView() {
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('map-detail').style.filter = "none";
+            document.getElementById('isolated-box').classList.remove('active');
+            initDefaultDash(); // Reset to education overview
+            document.getElementById('sub-filter-urbain').style.display = 'none';
+        }
+
+        const files = [{ f: "abteh.geojson", n: "Abteh" }, { f: "benkhlil.geojson", n: "Ben Khelil" }, { f: "chbika.geojson", n: "Chbika" }, { f: "commun tantan.geojson", n: "Tan-Tan" }, { f: "elouatia.geojson", n: "El Ouatia" }, { f: "msied.geojson", n: "Msied" }, { f: "tilemzoun.geojson", n: "Tilemzoun" }];
+        const group = new L.FeatureGroup().addTo(map);
+        files.forEach(item => {
+            fetch(item.f).then(r => r.json()).then(data => {
+                const l = L.geoJSON(data, { style: { color: "rgba(255,255,255,0.6)", weight: 1.5, fillColor: "#7dd3fc", fillOpacity: 0.7 } }).addTo(group);
+                layersMap[item.n] = l.getLayers()[0];
+                if (Object.keys(layersMap).length === files.length) map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            });
+        });
+    </script>
+</body>
+
+</html

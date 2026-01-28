@@ -1,0 +1,14 @@
+{
+"type": "FeatureCollection",
+"name": "centroide",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1, "code_commu": "105210301", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Msied" }, "geometry": { "type": "Point", "coordinates": [ -10.752623534878497, 27.938581997801915 ] } },
+{ "type": "Feature", "properties": { "fid": 2, "code_commu": "105210101", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Tan Tan" }, "geometry": { "type": "Point", "coordinates": [ -11.104568859424706, 28.433317479285616 ] } },
+{ "type": "Feature", "properties": { "fid": 3, "code_commu": "105210103", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "El Ouatia" }, "geometry": { "type": "Point", "coordinates": [ -11.329780946575852, 28.486249575214984 ] } },
+{ "type": "Feature", "properties": { "fid": 4, "code_commu": "105210303", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Tilemzoun" }, "geometry": { "type": "Point", "coordinates": [ -10.915496463409367, 28.328602555746947 ] } },
+{ "type": "Feature", "properties": { "fid": 5, "code_commu": "105210505", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Chbika" }, "geometry": { "type": "Point", "coordinates": [ -11.51834322070947, 28.207787656020425 ] } },
+{ "type": "Feature", "properties": { "fid": 6, "code_commu": "105210501", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Abteh" }, "geometry": { "type": "Point", "coordinates": [ -11.392460225435862, 27.941892167925062 ] } },
+{ "type": "Feature", "properties": { "fid": 7, "code_commu": "105210503", "REGION": "Guelmim-Oued Noun", "PROVINCE": "Tan-Tan", "NOM_COMMUN": "Ben Khlil" }, "geometry": { "type": "Point", "coordinates": [ -11.141710216827457, 28.537856653932934 ] } }
+]
+}

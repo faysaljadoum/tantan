@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Eau & Assainissement - Province de Tan-Tan</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0369a1;
+            --accent: #7dd3fc;
+            --glass: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow-wow: 0 25px 50px -12px rgba(14, 165, 233, 0.15);
+            --color-urbain: #0ea5e9;
+            --color-rural: #7dd3fc;
+            --alert-red: #e11d48;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Master Background --- */
+        .bg-master {
+            position: fixed;
+            inset: 0;
+            background: url('img/sahara_maroc.jpeg') center/cover no-repeat;
+            z-index: -1;
+            filter: saturate(0.9) brightness(1);
+            animation: bgPan 80s infinite alternate linear;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(241, 245, 249, 0.88);
+            backdrop-filter: blur(12px);
+            z-index: -1;
+        }
+
+        @keyframes bgPan {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.15) translate(-2%, -1%);
+            }
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 15px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(30, 58, 138, 0.1);
+            z-index: 2000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            animation: slideDown 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .pdti-subtitle {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shineText 4s linear infinite;
+        }
+
+        @keyframes shineText {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .maroc-separator {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .province-text {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 1.3rem;
+            color: #1e3a8a;
+            letter-spacing: 3px;
+        }
+
+        .line {
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--accent), transparent);
+            flex: 1;
+            width: 100px;
+            opacity: 0.6;
+        }
+
+        .logo-box {
+            width: 75px;
+            height: 75px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 2px solid rgba(14, 165, 233, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.1);
+            transition: all 0.5s;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .logo-box:hover {
+            transform: scale(1.1) rotate(5deg);
+            background: white;
+        }
+
+        .logo-box img {
+            width: 75%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* --- Premium Header Buttons (Blue Theme) --- */
+        .header-actions-pill {
+            position: absolute;
+            right: 40px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-header-pill {
+            background: white;
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50px;
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.08);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .btn-header-pill i {
+            font-size: 1.2rem;
+            z-index: 2;
+        }
+
+        .btn-header-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-header-pill:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);
+            border-color: var(--accent);
+        }
+
+        .btn-header-pill:hover::before {
+            opacity: 1;
+        }
+
+        .btn-header-pill:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        /* Tooltip style */
+        .btn-header-pill::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .btn-header-pill:hover::after {
+            opacity: 1;
+        }
+
+        /* --- Layout --- */
+        .middle-container {
+            flex: 1;
+            display: flex;
+            padding: 20px 30px;
+            gap: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .side-panel {
+            width: 350px;
+            position: relative;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 25px 20px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 35px;
+            box-shadow: var(--shadow-wow);
+            overflow-y: auto;
+            scrollbar-width: none;
+            transition: all 0.3s ease;
+            animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .side-panel.panel-right {
+            animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .side-panel::-webkit-scrollbar {
+            display: none;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            border-radius: 35px;
+            overflow: hidden;
+            box-shadow: var(--shadow-wow);
+            border: 1px solid var(--glass-border);
+            background: white;
+        }
+
+        #map-detail {
+            width: 100%;
+            height: 100%;
+            transition: filter 0.5s ease;
+        }
+
+        /* --- UI Elements --- */
+        @keyframes staggerIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-item {
+            opacity: 0;
+            animation: staggerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .stagger-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-item:nth-child(2) {
+            animation-delay: 0.18s;
+        }
+
+        .stagger-item:nth-child(3) {
+            animation-delay: 0.26s;
+        }
+
+        .stagger-item:nth-child(4) {
+            animation-delay: 0.34s;
+        }
+
+        .stagger-item:nth-child(5) {
+            animation-delay: 0.42s;
+        }
+
+        .stagger-item:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        .stagger-item:nth-child(7) {
+            animation-delay: 0.58s;
+        }
+
+        .stagger-item:nth-child(8) {
+            animation-delay: 0.66s;
+        }
+
+        .ui-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.05);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .ui-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(14, 165, 233, 0.15);
+            border-color: var(--accent);
+        }
+
+        .card-profile-header {
+            background: var(--primary);
+            padding: 15px;
+            margin: -10px auto 25px auto;
+            width: 90%;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2);
+        }
+
+        .indicator-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .indicator-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .indicator-label {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #1a365d;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 5px;
+        }
+
+        .data-table td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table td:first-child {
+            border-radius: 12px 0 0 12px;
+            color: #64748b;
+        }
+
+        .data-table td:last-child {
+            border-radius: 0 12px 12px 0;
+            text-align: right;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        /* --- Charts (Design Propre) --- */
+        .chart-box {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            text-align: center;
+            background: transparent;
+            padding: 0;
+            margin-bottom: 30px;
+        }
+
+        .chart-flex-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 160px;
+            gap: 5px;
+            padding: 10px 5px 40px 5px;
+            position: relative;
+            border: none;
+        }
+
+        .chart-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .c-bar {
+            width: 20px;
+            border-radius: 4px 4px 0 0;
+            transition: height 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            position: relative;
+        }
+
+        .c-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #0f172a;
+            opacity: 0;
+            transition: opacity 0.5s 0.8s;
+            white-space: nowrap;
+        }
+
+        .c-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #475569;
+            margin-top: 10px;
+            white-space: nowrap;
+            position: absolute;
+            bottom: -35px;
+        }
+
+        /* --- Filters --- */
+        .filter-container-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-filter-left,
+        .btn-commune-urbaine {
+            flex: 1;
+            background: white;
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .btn-filter-left:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .btn-commune-urbaine {
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-commune-urbaine:hover,
+        .btn-commune-urbaine.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* --- Navigation --- */
+        .bottom-nav {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            gap: 15px;
+            background: rgba(226, 232, 240, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 12px 30px;
+            border-radius: 100px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: slideUpNav 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            color: #334155;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            animation: navBtnEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active i,
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+
+        .nav-btn i {
+            font-size: 1.1rem;
+            color: #57595a;
+            transition: transform 0.3s;
+        }
+
+        @keyframes slideUpNav {
+            from {
+                transform: translate(-50%, 100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes navBtnEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Map Overlay --- */
+        #map-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            z-index: 500;
+            transition: 0.4s;
+            border-radius: 35px;
+        }
+
+        #map-overlay.active {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            pointer-events: auto;
+        }
+
+        #isolated-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 80%;
+            height: 80%;
+            z-index: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #isolated-box.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #isolated-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.2));
+        }
+
+        .pop-active {
+            animation: communePopOut 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            z-index: 100;
+        }
+
+        @keyframes communePopOut {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+            }
+
+            100% {
+                transform: translate(-15px, -15px) scale(1.08);
+                filter: drop-shadow(20px 20px 30px rgba(0, 0, 0, 0.4));
+            }
+        }
+
+        .isolated-path {
+            transition: all 0.4s;
+            cursor: pointer;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 35px;
+            width: 90%;
+            max-width: 900px;
+            overflow: hidden;
+            box-shadow: var(--shadow-wow);
+            transform: scale(0.9);
+            animation: modalPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalPop {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 35px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        /* --- Enhanced Diagnostic Popup (Blue Theme) --- */
+        .diag-row-container {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .diag-row-container.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .diag-cell-new {
+            background: #f0f9ff;
+            border-radius: 50px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-height: 55px;
+            border-left: 6px solid #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
+            transition: transform 0.3s;
+        }
+
+        .diag-cell-new:hover {
+            transform: scale(1.02);
+            background: white;
+        }
+
+        .diag-cell-new.diag-target-new {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);
+        }
+
+        .diag-cell-new.diag-target-new:hover {
+            background: white;
+        }
+
+        .icon-circle-diag {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .diag-text-premium {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.4;
+        }
+
+        .ciblage-title-premium {
+            padding: 12px;
+            border-radius: 50px;
+            text-align: center;
+            color: white;
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            letter-spacing: 1px;
+        }
+
+        .btn-arrow-round {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            outline: none;
+        }
+
+        .btn-arrow-round::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            opacity: 0;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
+            }
+        }
+
+        .btn-arrow-round:hover {
+            transform: scale(1.15) rotate(-10deg);
+            background: var(--primary-dark);
+            box-shadow: 0 15px 35px rgba(14, 165, 233, 0.6);
+        }
+
+        .btn-arrow-round i {
+            transition: transform 0.3s;
+        }
+
+        .btn-arrow-round:hover i {
+            transform: translateX(3px) scale(1.2);
+        }
+
+        .prog-table-header {
+            background: var(--primary);
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .prog-row {
+            transition: all 0.3s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .prog-row:hover {
+            background: #f0f9ff;
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            position: relative;
+        }
+
+        .prog-cell {
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .badge-commune {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: var(--primary-dark);
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.1);
+            margin: 4px 0;
+            white-space: nowrap;
+        }
+
+        .badge-commune i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .badge-cost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: var(--primary-dark);
+            width: 50px;
+            height: 45px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.1);
+            margin: 4px 0;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translate(-30%, -30%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-30%, -30%) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-master"></div>
+    <div class="bg-overlay"></div>
+
+    <style>
+        /* Responsive overrides (non-destructive) */
+        @media (max-width: 1024px) {
+            header {
+                padding: 12px 20px;
+                gap: 20px;
+            }
+
+            .logo-box {
+                width: 64px;
+                height: 64px;
+            }
+
+            .pdti-subtitle {
+                font-size: 1rem;
+            }
+
+            .province-text {
+                font-size: 1.1rem;
+            }
+
+            .middle-container {
+                padding: 16px;
+                gap: 12px;
+            }
+
+            .side-panel {
+                width: 300px;
+                padding: 20px;
+                border-radius: 28px;
+            }
+
+            .chart-flex-row {
+                height: 140px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 10px 14px;
+                gap: 12px;
+            }
+
+            .logo-box {
+                width: 56px;
+                height: 56px;
+            }
+
+            .pdti-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .province-text {
+                font-size: 1rem;
+                letter-spacing: 2px;
+            }
+
+            .header-actions-pill {
+                right: 14px;
+            }
+
+            .middle-container {
+                flex-direction: column;
+                padding: 12px;
+            }
+
+            .side-panel {
+                width: 100%;
+                max-height: 36vh;
+                border-radius: 20px;
+                padding: 14px;
+            }
+
+            #map-container {
+                width: 100%;
+                height: 48vh;
+                border-radius: 20px;
+            }
+
+            #map-detail {
+                height: 100%;
+            }
+
+            .chart-flex-row {
+                height: 120px;
+                padding: 18px 6px 30px 6px;
+            }
+
+            .c-bar {
+                width: 12px;
+            }
+
+            .bottom-nav {
+                bottom: 18px;
+                padding: 10px 18px;
+                gap: 8px;
+            }
+
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 8px 10px;
+            }
+
+            .logo-box {
+                width: 48px;
+                height: 48px;
+            }
+
+            .pdti-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .province-text {
+                font-size: 0.9rem;
+                letter-spacing: 1px;
+            }
+
+            .header-actions-pill {
+                right: 8px;
+            }
+
+            .middle-container {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .side-panel {
+                display: block;
+                width: 100%;
+                max-height: 30vh;
+                padding: 10px;
+                border-radius: 14px;
+            }
+
+            #map-container {
+                height: 42vh;
+                border-radius: 14px;
+            }
+
+            .chart-flex-row {
+                height: 100px;
+                padding: 12px 4px 24px 4px;
+            }
+
+            .c-bar {
+                width: 10px;
+            }
+
+            .c-label {
+                bottom: -30px;
+                font-size: 0.6rem;
+            }
+
+            .bottom-nav {
+                left: 8px;
+                right: 8px;
+                transform: none;
+                border-radius: 12px;
+                padding: 8px 12px;
+            }
+
+            .nav-btn {
+                font-size: 0.65rem;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+
+    <header>
+        <div class="logo-box" onclick="location.href='index.html'"><img src="img/logo_french.png" alt="Logo"></div>
+        <div class="header-center">
+            <div class="pdti-subtitle">PDTI Tan-Tan | Vers un territoire inclusif, durable et attractif</div>
+            <div class="maroc-separator">
+                <span class="line"></span><span class="province-text">AXE EAU</span><span class="line"></span>
+            </div>
+        </div>
+        <div class="logo-box" onclick="location.href='index.html'"><img src="img/logo_arabe.png" alt="Logo"></div>
+        <div class="header-actions-pill">
+            <button onclick="showCiblage()" class="btn-header-pill" data-tooltip="Diagnostic"><i
+                    class="fa-solid fa-bullseye"></i></button>
+            <a href="tantan.html" class="btn-header-pill" data-tooltip="Accueil"><i class="fa-solid fa-house"></i></a>
+            <button onclick="location.reload()" class="btn-header-pill" data-tooltip="Reset"><i
+                    class="fa-solid fa-rotate"></i></button>
+        </div>
+    </header>
+
+    <div class="middle-container">
+        <div class="side-panel" id="panel-left">
+            <div class="filter-container-left">
+                <div class="filter-row">
+                    <button class="btn-filter-left" onclick="isolateGroup('urbain')">
+                        <div style="width:12px; height:12px; border-radius:50%; background: var(--color-urbain);"></div>
+                        Urbain
+                    </button>
+                    <button class="btn-filter-left" onclick="isolateGroup('rural')">
+                        <div style="width:12px; height:12px; border-radius:50%; background: var(--color-rural);"></div>
+                        Rural
+                    </button>
+                </div>
+                <div id="sub-filter-urbain" class="filter-row" style="display: none; margin-top: 5px;">
+                    <button class="btn-commune-urbaine" id="btn-tantan" onclick="showTanTanDetails()">Tan-Tan</button>
+                    <button class="btn-commune-urbaine" id="btn-elouatia" onclick="showElOuatiaDetails()">El
+                        Ouatia</button>
+                </div>
+            </div>
+            <div id="panel-left-content"></div>
+        </div>
+
+        <div id="map-container">
+            <div id="map-detail"></div>
+            <div id="map-overlay"></div>
+            <div id="isolated-box"><svg id="isolated-svg" preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+
+        <div class="side-panel" id="panel-right"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="education.html" class="nav-btn"><i class="fa-solid fa-graduation-cap"></i> ÉDUCATION</a>
+        <a href="sante.html" class="nav-btn"><i class="fa-solid fa-hospital-user"></i> SANTÉ</a>
+        <a href="eau.html" class="nav-btn active"><i class="fa-solid fa-droplet"></i> EAU</a>
+        <a href="mise_a_niveau.html" class="nav-btn"><i class="fa-solid fa-road"></i> MAN</a>
+        <a href="emploi.html" class="nav-btn"><i class="fa-solid fa-briefcase"></i> EMPLOI</a>
+    </div>
+
+    <div id="alertPopup" class="modal-overlay" onclick="closePopupCiblage()">
+        <div class="modal-content" id="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div><i id="popup-header-icon" class="fa-solid fa-triangle-exclamation"></i> <span
+                        id="popup-title">DIAGNOSTIC</span></div>
+                <span style="cursor:pointer; font-size: 28px;" onclick="closePopupCiblage()">&times;</span>
+            </div>
+            <div class="modal-body" id="popup-body"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map("map-detail", { zoomControl: false, attributionControl: false });
+        const ruralNames = ["Chbika", "Abteh", "Msied", "Tilemzoun", "Ben Khelil"];
+        const urbainNames = ["Tan-Tan", "El Ouatia"];
+        let layersMap = {};
+
+        function highlightSVGCommune(name) {
+            document.querySelectorAll('.isolated-path').forEach(p => p.classList.remove('pop-active'));
+            const target = document.getElementById(`path-${name.replace(/\s+/g, '-')}`);
+            if (target) target.classList.add('pop-active');
+        }
+
+        // --- GLOBAL FUNCTION (STARTUP & PROVINCE VIEW) ---
+        function showGlobalStats() {
+            // Partie Gauche (Données image partie dreoite.png)
+            document.getElementById('panel-right').innerHTML = `
+              </div>   
+                </div>
+
+                <div class="ui-card stagger-item">
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">10 heures</span> d’autonomie d’EP</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-faucet-drip"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">66,2%</span> taux de rendement des réseaux AEP</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-recycle" ></i></div>                        
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0%</span> taux de réutilisation des eaux usées</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-cloud-showers-heavy"></i></div>
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0</span> réseau eaux pluviales</div>
+                    </div>
+                      
+                </div>
+
+                <div class="ui-card stagger-item">                 
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">65 km</span> de réseau AEP vétuste</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">50 km</span> de réseau d’assainissement à réhabiliter </div>
+                    </div>   
+                </div>
+
+                
+            `;
+
+            // Partie Droite (Données image partie gouche .png)
+            const assData = [
+                { l: "Province", v: 88.1, c: "#c00000" },
+                { l: "Région", v: 87.1, c: "#c00000" },
+                { l: "National", v: 92.6, c: "#c00000" }
+            ];
+            const aepData = [
+                { l: "Province", v: 93.2, c: "#5b9bd5" },
+                { l: "Région", v: 95.3, c: "#5b9bd5" },
+                { l: "National", v: 95.2, c: "#5b9bd5" }
+            ];
+
+            let assHtml = assData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            let aepHtml = aepData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            document.getElementById('panel-left-content').innerHTML = `
+                 <div class="ui-card stagger-item">   
+                    <div class="card-profile-header">Eau potable</div>             
+                    
+                    <table class="data-table stagger-item" style="margin-top:0;">
+                        <tr><td>Besoins en eau/année</td><td style="color:black;">3,0 Mm3</td></tr>
+                        <tr><td>Production eau/année</td><td style="color:black;">4,0 Mm3</td></tr>
+                    </table>
+                </div>
+
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('assainissement-global')">
+                  <div class="chart-title">Taux de raccordement au réseau d’assainissement (%)</div>
+                  <div class="chart-flex-row">${assHtml}</div>
+                </div>
+
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('aep-global')">
+                  <div class="chart-title">Taux d’accès au réseau AEP (%)</div>
+                  <div class="chart-flex-row">${aepHtml}</div>
+                </div>
+
+               
+            `;
+            animateBars();
+        }
+
+
+        // --- RURAL FUNCTIONS ---
+        function showRuralLeft() {
+            closeView();
+
+            const aepData = [
+                { l: "Ben kh.", v: 80, c: "#5b9bd5" },
+                { l: "Chbika", v: 0, c: "#5b9bd5" },
+                { l: "Abteh", v: 85, c: "#5b9bd5" },
+                { l: "Tilem.", v: 75, c: "#5b9bd5" },
+                { l: "Msied", v: 70, c: "#5b9bd5" }
+            ];
+
+            let aepHtml = aepData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            document.getElementById('sub-filter-urbain').style.display = 'none';
+            document.getElementById('panel-left-content').innerHTML = `
+            
+            <div class="ui-card stagger-item">
+                    <div class="card-profile-header">MILIEU RURAL</div>
+                            <div class="indicator-row stagger-item">
+                                <div class="indicator-icon"><i class="fa-solid fa-building-columns"></i></div>
+                                <div class="indicator-label">05 Communes urbaines</div>
+                            </div>
+                    <div class="indicator-row stagger-item">
+                                <div class="indicator-icon"><i class="fa-solid fa-users"></i></div>
+                                <div class="indicator-label">4 127 Habitants</div>
+                    </div>
+            </div> 
+
+            <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('aep-rural')">
+                  <div class="chart-title">Taux d’accès à l’AEP</div>
+                  <div class="chart-flex-row">${aepHtml}</div>
+            </div>
+
+            <div class="ui-card stagger-item">
+                    <div class="card-profile-header">INFRASTRUCTURE</div>
+                    <div class="stagger-item" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                   <div class="indicator-icon" style="width:70px; height:70px; margin-bottom: 15px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 5H22V8H2V5Z" fill="var(--primary)" />
+        
+        <rect x="3" y="8" width="3" height="11" rx="1" fill="var(--primary)" />
+        <rect x="10.5" y="8" width="3" height="11" rx="1" fill="var(--primary)" />
+        <rect x="18" y="8" width="3" height="11" rx="1" fill="var(--primary)" />
+        
+        <path d="M7 8V16C7 17.5 8 18.5 9.5 18.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M14.5 8V16C14.5 17.5 15.5 18.5 17 18.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+        
+        <path d="M2 19C4 18 6 20 8 19C10 18 12 20 14 19C16 18 18 20 20 19C22 18 24 20 24 19V22H0V19H2Z" fill="#38bdf8" fill-opacity="0.8"/>
+    </svg>
+</div>
+                        <div style="font-size:2.5rem; font-weight:900; color:var(--primary); line-height: 1;">07</div>
+                        <div style="font-size:0.9rem; font-weight:700; color:#1e293b; text-transform: uppercase; margin-top: 5px;">barrages collinaires</div>
+                        <div style="font-size:0.85rem; font-weight:600; color:#64748b; margin-top: 5px;">Capacité : 3,2 Mm³</div>
+                    </div>
+                </div>
+            `;
+            showRuralGlobalDetails();
+        }
+
+        function showRuralGlobalDetails() {
+
+
+            document.getElementById('panel-right').innerHTML = `
+
+            <div class="ui-card stagger-item" style="background:#c00000; color:white; text-align:center; padding:25px; border:none;">
+                    <div style="font-size:2.5rem; font-weight:900; margin-bottom:5px;">0%</div>
+                    <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; line-height:1.4;">Taux d’accès au réseau d’assainissement liquide</div>
+            </div>
+                
+
+                <div class="ui-card stagger-item" style="border-left: 6px solid #e11d48;">
+                    <div class="stagger-item" style="text-align:center; color:#e11d48; font-size:1.8rem; margin-bottom:15px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <ul class="stagger-item" style="list-style:none; padding:0; font-size:0.75rem; font-weight:700; color:#334155; line-height:1.8;">
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Rareté des ressources hydriques</li>
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Baisse des niveaux des eaux souterraines</li>
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Diminution du débit des puits</li>
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Qualité de l'eau dégradée (salinité élevée)</li>
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Faible capacité de stockage</li>
+                        <li><i class="fa-solid fa-caret-right" style="color:#e11d48; margin-right:5px;"></i> Manque d'AEP dans certains douars</li>
+                    </ul>
+                </div>
+
+               
+            `;
+            animateBars();
+        }
+
+        // --- URBAIN FUNCTIONS ---
+        function showUrbainLeft() {
+            closeView();
+            document.getElementById('sub-filter-urbain').style.display = 'flex';
+            document.getElementById('panel-left-content').innerHTML = `
+        <div class="ui-card stagger-item">
+          <div class="card-profile-header">MILIEU URBAIN</div>
+          <div class="indicator-row stagger-item">
+            <div class="indicator-icon"><i class="fa-solid fa-building-columns"></i></div>
+            <div class="indicator-label">02 Communes urbaines</div>
+          </div>
+          <div class="indicator-row stagger-item">
+            <div class="indicator-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="indicator-label">90 392 Habitants</div>
+          </div>
+        </div>
+      `;
+        }
+
+        function showTanTanDetails() {
+            highlightSVGCommune('Tan-Tan');
+            document.querySelectorAll('.btn-commune-urbaine').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-tantan').classList.add('active');
+
+            const assData = [
+                { l: "Tan-Tan", v: 94, c: "#c00000" },
+                { l: "Province", v: 88.1, c: "#c00000" },
+                { l: "Région", v: 87.1, c: "#c00000" },
+                { l: "National", v: 92.6, c: "#c00000" }
+            ];
+
+            const aepData = [
+                { l: "Tan-Tan", v: 96, c: "#5b9bd5" },
+                { l: "Province", v: 93.2, c: "#5b9bd5" },
+                { l: "Région", v: 95.3, c: "#5b9bd5" },
+                { l: "National", v: 95.2, c: "#5b9bd5" }
+            ];
+
+            let aepHtml = aepData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            let assHtml = assData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="card-profile-header">VILLE DE TAN-TAN</div>
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('assainissement-tantan')">
+                  <div class="chart-title">Taux de raccordement au réseau d’assainissement (%)</div>
+                  <div class="chart-flex-row">${assHtml}</div>
+                </div>
+
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('aep-tantan')">
+                  <div class="chart-title">Taux d’accès au réseau AEP (%)</div>
+                  <div class="chart-flex-row">${aepHtml}</div>
+                </div>
+
+                
+            `;
+
+            document.getElementById('panel-right').innerHTML = `
+                <div class="ui-card stagger-item">
+                    
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">10 heures</span> d’autonomie d’EP</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-faucet-drip"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">66,2%</span> taux de rendement des réseaux AEP</div>
+                    </div>
+                                       
+                     <div class="indicator-row stagger-item">
+                        <i class="fa-solid fa-recycle" style="font-size:2rem; color:#0ea5e9;"></i>
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0%</span> taux de réutilisation des eaux usées</div>
+                     </div>
+                      <div class="indicator-row stagger-item">
+                        <i class="fa-solid fa-cloud-showers-heavy" style="font-size:2rem; color:#0ea5e9;"></i>
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0</span> réseau eaux pluviales</div>
+                     </div>
+                     
+
+
+                    
+                </div>
+                <div class="ui-card stagger-item">
+                     <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">65 km</span> de réseau AEP vétuste</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-trowel-bricks"></i></div>
+                        <div style="font-weight:700; font-size:0.8rem; line-height:1.2;"><span style="color:red; font-size:1rem; font-weight:900;">50 km</span> de réseau d’assainissement à réhabiliter</div>
+                     </div>
+                </div>
+            `;
+            animateBars();
+        }
+
+        function showElOuatiaDetails() {
+            highlightSVGCommune('El Ouatia');
+            document.querySelectorAll('.btn-commune-urbaine').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-elouatia').classList.add('active');
+
+            const assData = [
+                { l: "El Ouatia", v: 56, c: "#c00000" },
+                { l: "Province", v: 88.1, c: "#c00000" },
+                { l: "Région", v: 87.1, c: "#c00000" },
+                { l: "National", v: 92.6, c: "#c00000" }
+            ];
+
+            const aepData = [
+                { l: "El Ouatia", v: 91, c: "#5b9bd5" },
+                { l: "Province", v: 93.2, c: "#5b9bd5" },
+                { l: "Région", v: 95.3, c: "#5b9bd5" },
+                { l: "National", v: 95.2, c: "#5b9bd5" }
+            ];
+
+            let aepHtml = aepData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            let assHtml = assData.map(d => `
+                <div class="chart-col">
+                  <div class="c-value">${d.v}%</div>
+                  <div class="c-bar" style="height:0; background:${d.c};" data-height="${(d.v / 100) * 120}"></div>
+                  <div class="c-label" style="transform:none; bottom:-20px;">${d.l}</div>
+                </div>`).join('');
+
+            document.getElementById('panel-left-content').innerHTML = `
+                <div class="card-profile-header">VILLE EL OUATIA</div>
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('assainissement-elouatia')">
+                  <div class="chart-title">Taux de raccordement au réseau d’assainissement (%)</div>
+                  <div class="chart-flex-row">${assHtml}</div>
+                </div>
+
+                <div class="chart-box stagger-item" style="cursor:pointer;" onclick="showGraphPopup('aep-elouatia')">
+                  <div class="chart-title">Taux d’accès au réseau AEP (%)</div>
+                  <div class="chart-flex-row">${aepHtml}</div>
+                </div>
+            `;
+
+            document.getElementById('panel-right').innerHTML = `
+                <div class="ui-card stagger-item">
+                    
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">10 heures</span> d’autonomie d’EP</div>
+                    </div>
+                    <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-faucet-drip"></i></div>
+                        <div class="indicator-label"><span style="color:#ff0000; font-size:1.1em;">66%</span> taux de rendement des réseaux AEP</div>
+                    </div>
+                        
+                     <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-recycle"></i></div>
+                        
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0%</span> taux de réutilisation des eaux usées</div>
+                     </div>
+                     <div class="indicator-row stagger-item">
+                        <div class="indicator-icon"><i class="fa-solid fa-cloud-showers-heavy"></i></div>
+                      
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0</span> réseau eaux pluviales</div>
+                     </div>
+                
+                </div>
+            `;
+            animateBars();
+        }
+
+        // --- NEW SHOW CIBLAGE FUNCTION (TEXTE COMPLET) ---
+        const diagnosticData = [
+            { icon: "fa-faucet-drip", prob: "Manque de généralisation de l’accès à l’AEP", target: "Atteindre un taux d’accès à l’AEP de 98%" },
+            { icon: "fa-faucet", prob: "Manque de généralisation de l’accès à l’assainissement liquide", target: "Atteindre un taux d’accès au réseau d’assainissement liquide de 98%" },
+            { icon: "fa-gauge-high", prob: "Faible taux de rendement des réseaux d’AEP (66%)", target: "Atteindre un taux de rendement des réseaux d’AEP de 85%" },
+            { icon: "fa-clock", prob: "Faible autonomie d’eau potable (10 heures)", target: "Atteindre une autonomie d’eau potable de 48 heures" },
+            { icon: "fa-recycle", prob: "Absence de la réutilisation des eaux usées (0%)", target: "Atteindre un taux de réutilisation des eaux usées de 60%" },
+            { icon: "fa-cloud-showers-heavy", prob: "Risques d’inondations dans les quartiers urbains", target: "Création des réseaux d’assainissement des eaux pluviales" },
+            { icon: "fa-droplet-slash", prob: "Raretés des ressources hydriques dans le milieu rural", target: "Création d’ouvrages hydrauliques pour la rétention des eaux pluviales et l’alimentation de la nappe phréatique" }
+        ];
+
+        function showCiblage() {
+            //closeView();
+            const body = document.getElementById('popup-body');
+            document.getElementById('popup-title').innerText = "DIAGNOSTIC EAU & ASSAINISSEMENT";
+            const icon = document.getElementById('popup-header-icon');
+            if (icon) icon.className = "fa-solid fa-triangle-exclamation";
+
+            let html = `
+                <div class="diag-row-container" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px; opacity: 1; transform: none;">
+                    <div class="ciblage-title-premium" style="background: #be123c;">PROBLÉMATIQUES MAJEURES</div>
+                    <div class="ciblage-title-premium" style="background: #15803d;">CIBLAGE & STRATÉGIE</div>
+                </div>
+                <div id="diag-rows-wrapper" style="display: flex; flex-direction: column; gap: 12px;">
+            `;
+
+            diagnosticData.forEach((item, index) => {
+                html += `
+                    <div class="diag-row-container" id="diag-row-${index}">
+                        <div class="diag-cell-new">
+                            <div class="icon-circle-diag" style="color: #be123c;">
+                                <i class="fa-solid ${item.icon}"></i>
+                            </div>
+                            <div class="diag-text-premium">${item.prob}</div>
+                        </div>
+                        <div class="diag-cell-new diag-target-new">
+                            <div class="icon-circle-diag" style="color: #15803d;">
+                                <i class="fa-solid ${item.icon}"></i>
+                            </div>
+                            <div class="diag-text-premium">${item.target}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+
+            // Link to Programme 2026
+            html += `
+                <div style="display:flex; justify-content:flex-end; margin-top:25px; padding-top:15px; border-top:1px solid #e2e8f0; align-items: center;">
+                    <button onclick="showProgramme2026()" class="btn-arrow-round" title="Voir le Programme 2026">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
+
+            body.innerHTML = html;
+            document.getElementById('alertPopup').style.display = 'flex';
+
+            // Staggered Animation
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.diag-row-container');
+                rows.forEach((row, index) => {
+                    if (index > 0) {
+                        setTimeout(() => {
+                            row.classList.add('active');
+                        }, (index - 1) * 100);
+                    } else if (row.parentElement.id !== "diag-rows-wrapper") {
+                        row.classList.add('active');
+                    }
+                });
+
+                const realRows = document.querySelectorAll('#diag-rows-wrapper .diag-row-container');
+                realRows.forEach((row, index) => {
+                    setTimeout(() => {
+                        row.classList.add('active');
+                    }, index * 100);
+                });
+            }, 50);
+        }
+
+        function showProgramme2026() {
+            const body = document.getElementById('popup-body');
+            document.getElementById('popup-title').innerText = " GESTION PROACTIVE DES RESSOURCES EN EAU";
+            const icon = document.getElementById('popup-header-icon');
+            if (icon) icon.className = "fa-solid fa-hand-holding-droplet";
+
+            let tableHtml = `
+                <div style="overflow-x:auto; padding:5px; animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; border-radius: 20px; text-align:center; color:white; font-weight:900; margin-bottom:25px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3); font-size:1.2rem; text-transform:uppercase; letter-spacing:1.5px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); animation: shimmer 6s infinite linear;"></div>
+                        Programme prioritaire au titre de l’année 2026
+                    </div>
+                
+                    <table style="width:100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.02);">
+                        <thead>
+                            <tr style="background: var(--primary); color:white;">
+                                <th class="prog-table-header">Projet</th>
+                                <th class="prog-table-header">Commune</th>
+                                <th class="prog-table-header" style="width:120px;">Coût (Mdhs)</th>
+                                <th class="prog-table-header">Objectifs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            tableHtml += createRow("Réhabilitation et renforcement du réseau d’AEP", "Tan-Tan | El Ouatia", "60 | 25", "-Augmentation du taux de rendement des réseaux<br>-Sécurisation de la potabilité", 0.1);
+            tableHtml += createRow("Extension du réseau d’AEP", "Msied", "10", "Amélioration de l’accès à l’eau potable", 0.2);
+            tableHtml += createRow("Réhabilitation et renforcement du réseau d’assainissement liquide", "Tan-Tan", "50", "-Amélioration du cadre de vie de la population<br>-Généralisation du raccordement au réseau d’assainissement liquide", 0.3);
+            tableHtml += createRow("Construction d’un réservoir semi-enterré de 20 000m3", "Tan-Tan", "35", "-Renforcement de la capacité de stockage<br>-Sécurisation de l’AEP", 0.4);
+            tableHtml += createRow("Construction d’un réservoir semi-enterré de 5 000m3", "El Ouatia", "12", "-Garantir une autonomie de stockage suffisante.", 0.5);
+            tableHtml += createRow("Réalisation du réseau d’assainissement des eaux pluviales", "Tan-Tan | El Ouatia", "50 | 20", "-Amélioration du cadre de vie de la population<br>-Lutte contre les inondations", 0.6);
+            tableHtml += createRow("Extension du réseau de réutilisation des eaux usées", "Tan-Tan", "40", "-Valorisation des eaux usées traitées pour irriguer les espaces verts ; Protection de l’environnement", 0.7);
+            tableHtml += createRow("Construction de 10 métfias", "Milieu rural", "04", "-Collecte des eaux pluviales<br>-Abreuvement du cheptel", 0.8);
+            tableHtml += createRow("Création et équipement de forages", "Milieu rural", "10", "Assurer la gestion des eaux souterraines", 0.9);
+
+            tableHtml += `
+    <tr class="prog-row" style="background:var(--primary); color:white; font-weight:900; animation: staggerIn 0.5s ease 1s forwards; opacity:0; transform:translateY(20px);">
+        <td class="prog-cell" style="color:white; text-align:center;">Total</td>
+        <td class="prog-cell" style="color:white;"></td>
+        <td class="prog-cell" style="color:white; text-align:center;">
+            <div class="badge-cost" style="background:white; color:var(--primary); border:none; width:65px; margin: 0 auto;">316</div>
+        </td>
+        <td class="prog-cell" style="color:white; text-align:center;"></td>
+    </tr>
+
+                        </tbody>
+                    </table>;
+                </div>
+
+                <div style="margin-top:20px; display:flex; justify-content:flex-start;">
+                    <button onclick="showCiblage()" class="btn-arrow-round" style="background:#64748b; border-color:white; width:50px; height:50px; font-size:1.2rem;">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+            `;
+
+            body.innerHTML = tableHtml;
+        }
+
+        function createRow(proj, com, cout, obj, delay) {
+            const comBadges = com.split('|').map(c => `<div class="badge-commune"><i class="fa-solid fa-location-dot"></i> ${c.trim()}</div>`).join('<br>');
+            const coutBadges = cout.split('|').map(c => `<div class="badge-cost">${c.trim()}</div>`).join('<br>');
+
+            return `
+                <tr class="prog-row" style="animation: staggerIn 0.5s ease ${delay}s forwards; opacity:0; transform:translateY(20px);">
+                    <td class="prog-cell" style="font-weight:700;">${proj}</td>
+                    <td class="prog-cell" style="text-align:center;">${comBadges}</td>
+                    <td class="prog-cell" style="text-align:center;">${coutBadges}</td>
+                    <td class="prog-cell" style="font-size:0.8rem;">${obj}</td>
+                </tr>
+            `;
+        }
+
+        function closePopupCiblage() {
+            document.getElementById('alertPopup').style.display = 'none';
+        }
+
+        function isolateGroup(zone) {
+            zone === 'rural' ? showRuralLeft() : showUrbainLeft();
+            document.getElementById('map-overlay').classList.add('active');
+            document.getElementById('map-detail').style.filter = "blur(10px)";
+            const svg = document.getElementById('isolated-svg');
+            svg.innerHTML = "";
+            let combinedBounds = null;
+            Object.keys(layersMap).forEach(name => {
+                const layer = layersMap[name];
+                const bbox = layer._path.getBBox();
+                if (!combinedBounds) combinedBounds = { x: bbox.x, y: bbox.y, r: bbox.x + bbox.width, b: bbox.y + bbox.height };
+                else {
+                    combinedBounds.x = Math.min(combinedBounds.x, bbox.x); combinedBounds.y = Math.min(combinedBounds.y, bbox.y);
+                    combinedBounds.r = Math.max(combinedBounds.r, bbox.x + bbox.width); combinedBounds.b = Math.max(combinedBounds.b, bbox.y + bbox.height);
+                }
+            });
+            Object.keys(layersMap).forEach(name => {
+                const layer = layersMap[name];
+                const isTarget = (zone === 'rural' ? ruralNames.includes(name) : urbainNames.includes(name));
+                if (!isTarget) {
+                    const ctx = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    ctx.setAttribute("d", layer._path.getAttribute('d'));
+                    ctx.setAttribute("fill", "#ffffff"); ctx.setAttribute("stroke", "#94a3b8"); ctx.setAttribute("stroke-width", "0.5");
+                    ctx.style.opacity = "0.7"; svg.appendChild(ctx);
+                }
+            });
+            Object.keys(layersMap).forEach(name => {
+                const layer = layersMap[name];
+                const isTarget = (zone === 'rural' ? ruralNames.includes(name) : urbainNames.includes(name));
+                if (isTarget) {
+                    const bbox = layer._path.getBBox();
+                    const centerX = bbox.x + bbox.width / 2;
+                    const centerY = bbox.y + bbox.height / 2;
+                    const trace = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    trace.setAttribute("d", layer._path.getAttribute('d'));
+                    trace.setAttribute("fill", "#e2e8f0"); trace.setAttribute("stroke", "#94a3b8");
+                    trace.setAttribute("stroke-width", "0.5"); svg.appendChild(trace);
+                    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    p.setAttribute("d", layer._path.getAttribute('d'));
+                    let pathColor = "var(--color-rural)";
+                    if (name === 'Tan-Tan' || name === 'El Ouatia') pathColor = "var(--color-urbain)";
+                    p.setAttribute("fill", pathColor);
+                    p.setAttribute("stroke", "#ffffff"); p.setAttribute("stroke-width", "1.5");
+                    p.setAttribute("id", `path - ${name.replace(/\s+/g, '-')} `);
+                    p.setAttribute("class", "isolated-path");
+                    p.style.transformOrigin = `${centerX}px ${centerY} px`;
+                    svg.appendChild(p);
+                    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    t.setAttribute("x", centerX); t.setAttribute("y", centerY + 5); t.setAttribute("text-anchor", "middle");
+                    t.setAttribute("fill", "#000"); t.setAttribute("stroke", "#fff"); t.setAttribute("stroke-width", "3");
+                    t.setAttribute("paint-order", "stroke"); t.setAttribute("font-size", "11"); t.setAttribute("font-weight", "900");
+                    t.textContent = name; svg.appendChild(t);
+                }
+            });
+            if (combinedBounds) svg.setAttribute('viewBox', `${combinedBounds.x - 20} ${combinedBounds.y - 20} ${combinedBounds.r - combinedBounds.x + 40} ${combinedBounds.b - combinedBounds.y + 40} `);
+            document.getElementById('isolated-box').classList.add('active');
+            setTimeout(() => { document.querySelectorAll('.isolated-path').forEach(p => p.classList.add('pop-active')); }, 100);
+        }
+
+        function closeView() {
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('map-detail').style.filter = "none";
+            document.getElementById('isolated-box').classList.remove('active');
+            document.getElementById('panel-left-content').innerHTML = "";
+            document.getElementById('panel-right').innerHTML = "";
+            document.getElementById('sub-filter-urbain').style.display = 'none';
+            map.fitBounds(group.getBounds(), { padding: [20, 20] });
+        }
+
+        function animateBars() {
+            setTimeout(() => {
+                document.querySelectorAll('.c-bar').forEach(bar => {
+                    bar.style.height = bar.getAttribute('data-height') + "px";
+                });
+                document.querySelectorAll('.c-value').forEach(val => {
+                    val.style.opacity = "1";
+                });
+            }, 100);
+        }
+
+        const files = [{ f: "abteh.geojson", n: "Abteh" }, { f: "benkhlil.geojson", n: "Ben Khelil" }, { f: "chbika.geojson", n: "Chbika" }, { f: "commun tantan.geojson", n: "Tan-Tan" }, { f: "elouatia.geojson", n: "El Ouatia" }, { f: "msied.geojson", n: "Msied" }, { f: "tilemzoun.geojson", n: "Tilemzoun" }];
+        const group = new L.FeatureGroup().addTo(map);
+        files.forEach(item => {
+            fetch(item.f).then(r => r.json()).then(data => {
+                const l = L.geoJSON(data, { style: { color: "rgba(255,255,255,0.8)", weight: 2, fillColor: "var(--primary)", fillOpacity: 0.15 } }).addTo(group);
+                layersMap[item.n] = l.getLayers()[0];
+                if (Object.keys(layersMap).length === files.length) {
+                    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                }
+            });
+        });
+
+        window.onload = function () {
+            // Initial view is GLOBAL (Province Stats)
+            showGlobalStats();
+        };
+
+        // --- POPUP GRAPHS ---
+
+        function animateCounter(id, start, end, duration, decimals = 1, suffix = '') {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const val = (progress * (end - start) + start).toFixed(decimals);
+                obj.innerHTML = val + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function showGraphPopup(type) {
+            const modal = document.getElementById('alertPopup');
+            const title = document.getElementById('popup-title');
+            const body = document.getElementById('popup-body');
+            const contentBox = document.getElementById('modal-content');
+
+            contentBox.style.maxWidth = "900px";
+            //color change
+            document.querySelector('.modal-header').style.background = "var(--primary)";
+
+            // Style CSS pour le popup
+            const popupStyle = `
+                <style>
+                    .popup-chart-container { background: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+                    .popup-bars-area { display: flex; align-items: flex-end; justify-content: center; gap: 40px; height: 350px; margin-top: 20px; width: 100%; }
+                    .popup-bar-group { display: flex; flex-direction: column; align-items: center; width: 60px; }
+                    .popup-bar { width: 45px; border-radius: 8px 8px 0 0; transition: height 1s ease; height: 0; position:relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    .popup-bar-value { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+                    .popup-bar-label { margin-top: 15px; font-weight: 800; text-transform: uppercase; color: #1e293b; font-size: 0.85rem; text-align:center; }
+                    .popup-legend { display: flex; gap: 30px; margin-bottom: 20px; }
+                    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #475569; }
+                    .legend-box { width: 20px; height: 20px; border-radius: 4px; }
+                </style>
+            `;
+
+            let popupTitle = "";
+            let barsData = []; // Tableau d'objets { val, label, color }
+
+            // --- CONFIGURATION DES DONNÉES ---
+
+            if (type === 'assainissement-global') {
+                popupTitle = "TAUX DE RACCORDEMENT À L'ASSAINISSEMENT (%)";
+                barsData = [
+                    { val: 88.1, label: "Province", color: "#c00000" },
+                    { val: 87.1, label: "Région", color: "#c00000" },
+                    { val: 92.6, label: "National", color: "#c00000" }
+                ];
+            } else if (type === 'aep-global') {
+                popupTitle = "TAUX D'ACCÈS AU RÉSEAU AEP (%)";
+                barsData = [
+                    { val: 93.2, label: "Province", color: "#5b9bd5" },
+                    { val: 95.3, label: "Région", color: "#5b9bd5" },
+                    { val: 95.2, label: "National", color: "#5b9bd5" }
+                ];
+            } else if (type === 'assainissement-tantan') {
+                popupTitle = "TAUX D'ASSAINISSEMENT - TAN-TAN (%)";
+                barsData = [
+                    { val: 94, label: "TanTan", color: "#c00000" },
+                    { val: 88.1, label: "Province", color: "#c00000" },
+                    { val: 87.1, label: "Région", color: "#c00000" },
+                    { val: 92.6, label: "National", color: "#c00000" }
+                ];
+            } else if (type === 'aep-tantan') {
+                popupTitle = "TAUX D'ACCÈS AEP - TAN-TAN (%)";
+                barsData = [
+                    { val: 96, label: "TanTan", color: "#5b9bd5" },
+                    { val: 93.2, label: "Province", color: "#5b9bd5" },
+                    { val: 95.3, label: "Région", color: "#5b9bd5" },
+                    { val: 95.2, label: "National", color: "#5b9bd5" }
+                ];
+            } else if (type === 'assainissement-elouatia') {
+                popupTitle = "TAUX D'ASSAINISSEMENT - EL OUATIA (%)";
+                barsData = [
+                    { val: 56, label: "ElOuatia", color: "#c00000" },
+                    { val: 88.1, label: "Province", color: "#c00000" },
+                    { val: 87.1, label: "Région", color: "#c00000" },
+                    { val: 92.6, label: "National", color: "#c00000" }
+                ];
+            } else if (type === 'aep-elouatia') {
+                popupTitle = "TAUX D'ACCÈS AEP - EL OUATIA (%)";
+                barsData = [
+                    { val: 91, label: "ElOuatia", color: "#5b9bd5" },
+                    { val: 93.2, label: "Province", color: "#5b9bd5" },
+                    { val: 95.3, label: "Région", color: "#5b9bd5" },
+                    { val: 95.2, label: "National", color: "#5b9bd5" }
+                ];
+            } else if (type === 'aep-rural') {
+                popupTitle = "TAUX D'ACCÈS AEP - MILIEU RURAL (%)";
+                barsData = [
+                    { val: 80, label: "BenKhelil", color: "#5b9bd5" },
+                    { val: 0, label: "Chbika", color: "#5b9bd5" },
+                    { val: 85, label: "Abteh", color: "#5b9bd5" },
+                    { val: 75, label: "Tilemzoun", color: "#5b9bd5" },
+                    { val: 70, label: "Msied", color: "#5b9bd5" }
+                ];
+            }
+
+            title.innerText = popupTitle;
+
+            // --- CONSTRUCTION HTML DYNAMIQUE ---
+            let barsHTML = "";
+            barsData.forEach(item => {
+                // Hauteur max visuelle environ 300px pour 100%
+                let h = (item.val / 100) * 300;
+                if (item.val === 0) h = 2; // Barre minimale pour 0
+
+                barsHTML += `
+                    <div class="popup-bar-group">
+                        <div class="popup-bar-value">${item.val}</div>
+                        <div class="popup-bar" style="background:${item.color}; height: ${h}px;"></div>
+                        <div class="popup-bar-label">${item.label}</div>
+                    </div>
+                `;
+            });
+
+
+
+            const finalHTML = `
+                ${popupStyle}
+                <div class="popup-chart-container">
+                   
+                    <div class="popup-bars-area">
+                        ${barsHTML}
+                    </div>
+                </div>
+            `;
+
+            body.innerHTML = finalHTML;
+            modal.style.display = 'flex';
+        }
+
+        // Fonction fermeture sans reload
+        function closePopupCiblage() {
+            document.getElementById('alertPopup').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
