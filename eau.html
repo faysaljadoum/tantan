@@ -1236,7 +1236,7 @@
                     </div>
                     <div class="indicator-row stagger-item">
                         <div class="indicator-icon"><i class="fa-solid fa-cloud-showers-heavy"></i></div>
-                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">0</span> réseau eaux pluviales</div>
+                        <div style="font-weight:700; font-size:0.9rem;"><span style="color:red; font-size:1.2rem;">Manque</span> de 90% du réseau d'assainissement des eaux pluviales</div>
                     </div>
                       
                 </div>
@@ -1427,14 +1427,14 @@
             document.getElementById('btn-tantan').classList.add('active');
 
             const assData = [
-                { l: "Tan-Tan", v: 94, c: "#c00000" },
+                { l: "Tan-Tan", v: 95.9, c: "#c00000" },
                 { l: "Province", v: 88.1, c: "#c00000" },
                 { l: "Région", v: 87.1, c: "#c00000" },
                 { l: "National", v: 92.6, c: "#c00000" }
             ];
 
             const aepData = [
-                { l: "Tan-Tan", v: 96, c: "#5b9bd5" },
+                { l: "Tan-Tan", v: 93.8, c: "#5b9bd5" },
                 { l: "Province", v: 93.2, c: "#5b9bd5" },
                 { l: "Région", v: 95.3, c: "#5b9bd5" },
                 { l: "National", v: 95.2, c: "#5b9bd5" }
@@ -1589,8 +1589,8 @@
             { icon: "fa-gauge-high", prob: "Faible taux de rendement des réseaux d’AEP (66%)", target: "Atteindre un taux de rendement des réseaux d’AEP de 85%" },
             { icon: "fa-clock", prob: "Faible autonomie d’eau potable (10 heures)", target: "Atteindre une autonomie d’eau potable de 48 heures" },
             { icon: "fa-recycle", prob: "Absence de la réutilisation des eaux usées (0%)", target: "Atteindre un taux de réutilisation des eaux usées de 60%" },
-            { icon: "fa-cloud-showers-heavy", prob: "Risques d’inondations dans les quartiers urbains", target: "Création des réseaux d’assainissement des eaux pluviales" },
-            { icon: "fa-droplet-slash", prob: "Raretés des ressources hydriques dans le milieu rural", target: "Création d’ouvrages hydrauliques pour la rétention des eaux pluviales et l’alimentation de la nappe phréatique" }
+            { icon: "fa-cloud-showers-heavy", prob: "Risques d’inondations dans les quartiers urbains et les centres des communes", target: "Création des réseaux d’assainissement des eaux pluviales et des ouvrages de protection contre les inondations" },
+            { icon: "fa-droplet-slash", prob: "Raretés des ressources hydriques dans le milieu rural", target: "Aménager des points d'eau durables" }
         ];
 
         function showCiblage() {
@@ -1629,14 +1629,6 @@
 
             html += `</div>`;
 
-            // Link to Programme 2026
-            html += `
-                <div style="display:flex; justify-content:flex-end; margin-top:25px; padding-top:15px; border-top:1px solid #e2e8f0; align-items: center;">
-                    <button onclick="showProgramme2026()" class="btn-arrow-round" title="Voir le Programme 2026">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            `;
 
             body.innerHTML = html;
             document.getElementById('alertPopup').style.display = 'flex';
@@ -1663,64 +1655,7 @@
             }, 50);
         }
 
-        function showProgramme2026() {
-            const body = document.getElementById('popup-body');
-            document.getElementById('popup-title').innerText = " GESTION PROACTIVE DES RESSOURCES EN EAU";
-            const icon = document.getElementById('popup-header-icon');
-            if (icon) icon.className = "fa-solid fa-hand-holding-droplet";
-
-            let tableHtml = `
-                <div style="overflow-x:auto; padding:5px; animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
-                    <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; border-radius: 20px; text-align:center; color:white; font-weight:900; margin-bottom:25px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3); font-size:1.2rem; text-transform:uppercase; letter-spacing:1.5px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); animation: shimmer 6s infinite linear;"></div>
-                        Programme prioritaire au titre de l’année 2026
-                    </div>
-                
-                    <table style="width:100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.02);">
-                        <thead>
-                            <tr style="background: var(--primary); color:white;">
-                                <th class="prog-table-header">Projet</th>
-                                <th class="prog-table-header">Commune</th>
-                                <th class="prog-table-header" style="width:120px;">Coût (Mdhs)</th>
-                                <th class="prog-table-header">Objectifs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            tableHtml += createRow("Réhabilitation et renforcement du réseau d’AEP", "Tan-Tan | El Ouatia", "60 | 25", "-Augmentation du taux de rendement des réseaux<br>-Sécurisation de la potabilité", 0.1);
-            tableHtml += createRow("Extension du réseau d’AEP", "Msied", "10", "Amélioration de l’accès à l’eau potable", 0.2);
-            tableHtml += createRow("Réhabilitation et renforcement du réseau d’assainissement liquide", "Tan-Tan", "50", "-Amélioration du cadre de vie de la population<br>-Généralisation du raccordement au réseau d’assainissement liquide", 0.3);
-            tableHtml += createRow("Construction d’un réservoir semi-enterré de 20 000m3", "Tan-Tan", "35", "-Renforcement de la capacité de stockage<br>-Sécurisation de l’AEP", 0.4);
-            tableHtml += createRow("Construction d’un réservoir semi-enterré de 5 000m3", "El Ouatia", "12", "-Garantir une autonomie de stockage suffisante.", 0.5);
-            tableHtml += createRow("Réalisation du réseau d’assainissement des eaux pluviales", "Tan-Tan | El Ouatia", "50 | 20", "-Amélioration du cadre de vie de la population<br>-Lutte contre les inondations", 0.6);
-            tableHtml += createRow("Extension du réseau de réutilisation des eaux usées", "Tan-Tan", "40", "-Valorisation des eaux usées traitées pour irriguer les espaces verts ; Protection de l’environnement", 0.7);
-            tableHtml += createRow("Construction de 10 métfias", "Milieu rural", "04", "-Collecte des eaux pluviales<br>-Abreuvement du cheptel", 0.8);
-            tableHtml += createRow("Création et équipement de forages", "Milieu rural", "10", "Assurer la gestion des eaux souterraines", 0.9);
-
-            tableHtml += `
-    <tr class="prog-row" style="background:var(--primary); color:white; font-weight:900; animation: staggerIn 0.5s ease 1s forwards; opacity:0; transform:translateY(20px);">
-        <td class="prog-cell" style="color:white; text-align:center;">Total</td>
-        <td class="prog-cell" style="color:white;"></td>
-        <td class="prog-cell" style="color:white; text-align:center;">
-            <div class="badge-cost" style="background:white; color:var(--primary); border:none; width:65px; margin: 0 auto;">316</div>
-        </td>
-        <td class="prog-cell" style="color:white; text-align:center;"></td>
-    </tr>
-
-                        </tbody>
-                    </table>;
-                </div>
-
-                <div style="margin-top:20px; display:flex; justify-content:flex-start;">
-                    <button onclick="showCiblage()" class="btn-arrow-round" style="background:#64748b; border-color:white; width:50px; height:50px; font-size:1.2rem;">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                </div>
-            `;
-
-            body.innerHTML = tableHtml;
-        }
+       
 
         function createRow(proj, com, cout, obj, delay) {
             const comBadges = com.split('|').map(c => `<div class="badge-commune"><i class="fa-solid fa-location-dot"></i> ${c.trim()}</div>`).join('<br>');

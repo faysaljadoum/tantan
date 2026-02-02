@@ -1622,7 +1622,7 @@
     }
 
     const diagnosticData = [
-      { icon: "fa-user-slash", prob: "Chômage élevé", target: "Réduire le taux de chômage de 25,3% à 10%" },
+      { icon: "fa-user-slash", prob: "Chômage élevé", target: "Réduire le taux de chômage de 25,3% à 15%" },
       { icon: "fa-person-digging", prob: "Précarité de l'emploi existant et absence de perspectives professionnelles dans le milieu rural", target: "Diversification des activités économiques<br>Soutien à l’entreprenariat et aux coopératives agricoles" },
       { icon: "fa-user-graduate", prob: "Chômage des jeunes et des diplômés", target: "Promotion de l’entreprenariat et de l’auto-emploi<br>Adaptation des compétences aux besoins du marché de l’emploi" },
       { icon: "fa-handshake-slash", prob: "Faible impact de l’économie sociale et solidaire sur l’emploi ", target: "Renforcement de l’économie sociale et solidaire<br>Soutien financier" },
@@ -1709,12 +1709,7 @@
           `;
       });
 
-      html += `
-        </div>
-        <button onclick="showProgramme2026()" class="btn-next-float" title="Voir le Programme 2026">
-            <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      `;
+   
 
       body.innerHTML = html;
       document.getElementById('alertPopup').style.display = 'flex';
@@ -1730,113 +1725,7 @@
       }, 50);
     }
 
-    function showProgramme2026() {
-      closePopupCiblage();
-      const modal = document.getElementById('programmePopup');
-      const body = document.getElementById('prog-popup-body');
-      const header = modal.querySelector('.modal-header');
-
-      header.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:rgba(255,255,255,0.2); padding:8px; border-radius:10px;">
-                    <i class="fa-solid fa-briefcase" style="font-size:1.4rem;"></i>
-                </div>
-                <span style="font-size:1.2rem; font-weight:800; text-transform:uppercase; letter-spacing:2px;"> Emploi</span>
-            </div>
-            <span onclick="closeProgrammePopup()" style="font-size:2rem; cursor:pointer; opacity:0.8;">&times;</span>
-        `;
-
-      header.style.background = "linear-gradient(135deg, #a2466c 0%, #d199b0 100%)";
-      header.style.padding = "20px 40px";
-
-      const contentBox = document.getElementById('prog-modal-content');
-      contentBox.style.maxWidth = "1150px";
-      contentBox.style.borderRadius = "24px";
-
-      let html = `
-            <style>
-                .prog-container-inner { padding: 40px; background: #faf5f7; position: relative; overflow: hidden; }
-                .prog-banner-title {
-                    background: white; color: #7d3350; padding: 20px 30px; border-radius: 16px; border-left: 8px solid #a2466c;
-                    font-size: 1.4rem; font-weight: 800; margin-bottom: 30px; text-transform: uppercase;
-                    box-shadow: 0 10px 30px rgba(162, 70, 108, 0.08); display: flex; align-items: center; gap: 15px;
-                }
-                .table-2026 { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
-                .table-2026 thead th { color: #831843; padding: 0 20px 10px 20px; text-align: left; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; opacity: 0.8; }
-                .table-2026 tbody tr { background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.03); opacity:0; transform:translateY(20px); animation: fadeInUpRow 0.5s ease forwards; }
-                .table-2026 td { padding: 20px; vertical-align: middle; color: #1e293b; font-weight: 600; border-top:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; }
-                .table-2026 td:first-child { border-left: 4px solid #d199b0; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-                .table-2026 td:last-child { border-right: 1px solid #f1f5f9; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-                @keyframes fadeInUpRow { to { opacity: 1; transform: translateY(0); } }
-                .pill-loc { display: inline-flex; align-items: center; gap: 8px; background: #fff1f2; color: #a2466c; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; border: 1px solid #fecdd3; white-space: nowrap; }
-                .pill-cost-violet { display: inline-flex; justify-content: center; align-items: center; width: 50px; height: 50px; background: #fff; color: #a2466c; border-radius: 12px; font-weight: 900; font-size: 1.2rem; border: 2px solid #d199b0; box-shadow: 0 4px 8px rgba(162, 70, 108, 0.1); }
-                .obj-list { margin: 0; padding-left: 20px; list-style: none; }
-                .obj-list li { margin-bottom: 5px; position: relative; }
-                .obj-list li::before { content: "•"; color: #a2466c; font-weight: bold; position: absolute; left: -15px; }
-                .total-row-violet { background: #a2466c !important; color: white !important; font-weight: 900; }
-                .total-row-violet td { color: white !important; border:none !important; padding: 20px !important; }
-                .total-box-white { display: inline-flex; border: 2px solid rgba(255,255,255,0.4); padding: 8px 18px; border-radius: 12px; background: rgba(255,255,255,0.15); font-size: 1.5rem; }
-            </style>
-
-            <div class="prog-container-inner">
-                <div class="prog-banner-title">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                    Programme prioritaire au titre de l’année 2026
-                </div>
-
-                <table class="table-2026">
-                    <thead>
-                        <tr>
-                            <th width="35%">Projet</th>
-                            <th width="20%">Commune</th>
-                            <th width="15%" style="text-align:center;">Coût (Mdhs)</th>
-                            <th width="30%">Objectifs</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="animation-delay: 0.1s">
-                            <td style="color:#7d3350; font-weight:700;">Développement de l’économie sociale et solidaire </td>
-                            <td><span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Intercommunal</span></td>
-                            <td align="center"><div class="pill-cost-violet">160</div></td>
-                            <td>
-                                <ul class="obj-list">
-                                    <li>Lutte contre l’exode rural</li>
-                                    <li>Création de l’emploi</li>
-                                    <li>Amélioration des revenus</li>
-                                    <li>Promotion des produits de terroir</li>
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr style="animation-delay: 0.2s">
-                            <td style="color:#7d3350; font-weight:700;">Création de 03 marchés de proximité</td>
-                            <td>
-                                <div style="display:flex; flex-direction:column; gap:6px;">
-                                    <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> Tan-Tan</span>
-                                    <span class="pill-loc"><i class="fa-solid fa-location-dot"></i> El Ouatia</span>
-                                </div>
-                            </td>
-                            <td align="center"><div class="pill-cost-violet">36</div></td>
-                            <td><ul class="obj-list"><li>Favoriser l’économie de proximité</li></ul></td>
-                        </tr>
-                        <tr style="animation-delay: 0.3s; background:var(--primary); box-shadow: 0 10px 20px rgba(162, 70, 108, 0.25);" class="total-row-violet">
-                            <td colspan="2" style="text-align:center; font-size:1.4rem;">TOTAL</td>
-                            <td align="center"><div class="total-box-white">196</div></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div style="margin-top:30px;">
-                    <button onclick="backToDiag()" style="background:white; border:none; padding:12px 25px; border-radius:50px; color:#64748b; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow:0 4px 10px rgba(0,0,0,0.05); transition:0.3s;" onmouseover="this.style.color='#a2466c'; this.style.transform='translateX(-5px)'" onmouseout="this.style.color='#64748b'; this.style.transform='none'">
-                        <i class="fa-solid fa-arrow-left"></i> Retour au Diagnostic
-                    </button>
-                </div>
-            </div>
-        `;
-
-      body.innerHTML = html;
-      modal.style.display = 'flex';
-    }
+   
 
     function closeProgrammePopup() {
       location.href = 'synthes.html';
@@ -1951,10 +1840,10 @@
               <div class="diag-card diag-prob" style="animation-delay: 0.2s; border-left-color: #4a6741;">
                 <div class="diag-icon" style="color: #4a6741; background: rgba(74, 103, 65, 0.1);"><i class="fa-solid fa-cloud-sun-rain"></i></div>
                 <div class="diag-text">
-                  <li>Rareté des ressources</li>
-                  <li>difficultés de financement</li>
+                  <li>Rareté des ressources hydriques</li>
+                  <li>Difficultés de financement</li>
                   <li>Pénurie de main d'œuvre qualifiée</li>
-                  <li>exode rural</li>
+                  <li>Exode rural</li>
                 </div>
               </div>
 
@@ -1981,7 +1870,7 @@
                   <li>Difficultés de commercialisation</li>
                   <li>Difficultés d'accès au financement</li>
                   <li>Faibles actions d'encadrement</li>
-                  <li>Faible utilisation des NTIC</li>
+                  <li>Faible utilisation des technologies numériques</li>
                 </div>
               </div>
             </div>
